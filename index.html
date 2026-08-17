@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECON 3204 · Macroeconomic Theory · Fall 2026</title>
+<script>
+  if (window !== window.top) {
+    document.documentElement.classList.add('in-iframe');
+  }
+</script>
+<style>
+  :root {
+    /* ── Three core palette colors + golden highlight ─────────────────
+       #74A089  sage green  (Royal2)    — primary / structural
+       #E6A0C4  pink        (GB2)       — warm accent
+       #C6CDF7  lavender    (GB2)       — cool secondary
+       #FAD77B  golden      (Moonrise3) — warm highlight / badges
+    ──────────────────────────────────────────────────────────────────── */
+    --sage:    #74A089;
+    --pink:    #E6A0C4;
+    --lav:     #C6CDF7;
+    --gold:    #FAD77B;
+
+    /* Richer versions for borders, chips, gradients */
+    --sage-dk: #4E7262;
+    --pink-dk: #B05888;
+    --lav-dk:  #8896E0;
+    --gold-dk: #A07820;
+
+    /* ── Original warm cream backgrounds (restored) ── */
+    --bg:      #FDF8F2;
+    --bg2:     #F7EBD8;
+    --bg3:     #EFE0CA;
+    --surface: #F4E8D4;
+    --border:  #E0C8A8;
+    --text:    #2C1E14;
+    --muted:   #7A6858;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 52px;
+    background: rgba(253,248,242,0.95);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand {
+    font-size: .75rem; font-weight: 800; letter-spacing: .15em;
+    color: var(--sage-dk); text-transform: uppercase;
+  }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: .73rem; letter-spacing: .08em; text-transform: uppercase;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; padding: 6rem 2rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    /* Four warm-cream glows — lush on the cream base */
+    background:
+      radial-gradient(ellipse 75% 55% at 50% 38%, rgba(116,160,137,.18) 0%, transparent 70%),
+      radial-gradient(ellipse 55% 50% at 82% 75%, rgba(230,160,196,.20) 0%, transparent 70%),
+      radial-gradient(ellipse 45% 55% at 10% 62%, rgba(198,205,247,.22) 0%, transparent 70%),
+      radial-gradient(ellipse 35% 40% at 60% 90%, rgba(250,215,123,.16) 0%, transparent 70%),
+      linear-gradient(180deg, #FDF8F2 0%, #F5E4CC 100%);
+  }
+  .grid-lines {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(44,30,20,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(44,30,20,.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 50%, black 0%, transparent 100%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 50%, black 0%, transparent 100%);
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 780px; }
+
+  /* Solid sage chip — grounds the page immediately */
+  .hero-tag {
+    display: inline-block;
+    font-size: .72rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+    background: var(--sage); color: #fff;
+    padding: .35rem .9rem; border-radius: 2rem; margin-bottom: 2rem;
+    animation: fadeUp .8s ease both;
+  }
+
+  /* Deep sage → deep rose: readable on warm cream, dramatic */
+  .hero-title {
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 900; line-height: 1; letter-spacing: -.03em;
+    background: linear-gradient(135deg, var(--sage-dk) 20%, var(--sage) 50%, var(--pink-dk));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: fadeUp .8s .15s ease both;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(.9rem, 2vw, 1.05rem);
+    color: var(--muted); margin-top: 1.2rem;
+    max-width: 520px; margin-left: auto; margin-right: auto;
+    animation: fadeUp .8s .3s ease both;
+  }
+
+  .hero-question {
+    margin-top: 2.5rem;
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    font-weight: 300; color: var(--text);
+    min-height: 2.2rem;
+    animation: fadeUp .8s .45s ease both;
+  }
+  .hero-question .typed-cursor {
+    display: inline-block; width: 2.5px; height: 1.2em;
+    background: var(--gold);        /* golden cursor — warm pop */
+    margin-left: 2px; vertical-align: text-bottom;
+    animation: blink 1s step-end infinite; border-radius: 1px;
+  }
+
+  .hero-cta {
+    margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp .8s .6s ease both;
+  }
+
+  .btn {
+    display: inline-block; padding: .78rem 1.9rem;
+    font-size: .85rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    text-decoration: none; border-radius: .3rem;
+    transition: transform .15s, box-shadow .15s; cursor: pointer;
+  }
+  .btn:hover { transform: translateY(-2px); }
+
+  /* Sage → pink gradient, matching the ECON 3204 hero title */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--sage-dk) 0%, var(--sage) 50%, var(--pink-dk) 100%);
+    color: #fff; box-shadow: 0 4px 20px rgba(176,88,136,.35);
+  }
+  .btn-primary:hover { box-shadow: 0 8px 28px rgba(176,88,136,.5); }
+
+  /* Pink canvas button */
+  .btn-zoom {
+    background: linear-gradient(135deg, var(--pink-dk), var(--pink));
+    color: #fff; box-shadow: 0 4px 20px rgba(230,160,196,.40);
+  }
+  .btn-zoom:hover { box-shadow: 0 8px 28px rgba(230,160,196,.58); }
+
+  .hero-pills {
+    margin-top: 3.5rem; display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp .8s .75s ease both;
+  }
+  .pill {
+    background: rgba(253,248,242,.82); border: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-radius: 2rem; padding: .35rem .9rem;
+    font-size: .75rem; color: var(--muted);
+  }
+  .pill span { color: var(--text); font-weight: 600; }
+
+  /* ── NAV — small screens (phones, iPad Split View) ──
+     6 nav-links + brand don't fit a fixed-width row under ~700px;
+     let the link row scroll horizontally instead of overflowing/clipping. */
+  @media (max-width: 700px) {
+    nav { padding: 0 1rem; }
+    .nav-brand { font-size: .66rem; flex-shrink: 0; margin-right: .75rem; }
+    .nav-links {
+      gap: 1rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; mask-image: linear-gradient(90deg, transparent, #000 12px, #000 100%);
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { font-size: .68rem; white-space: nowrap; }
+  }
+
+  /* ── SECTIONS ── */
+  section { padding: 5rem 2rem; }
+  .section-inner { max-width: 860px; margin: 0 auto; }
+
+  /* Sage-tinted section tag chip */
+  .section-tag {
+    display: inline-block;
+    font-size: .68rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+    background: rgba(116,160,137,.16); color: var(--sage-dk);
+    padding: .22rem .65rem; border-radius: .25rem; margin-bottom: .9rem;
+  }
+  .section-title {
+    font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; letter-spacing: -.02em;
+    margin-bottom: 2rem; line-height: 1.15; color: var(--text);
+  }
+
+  /* ── CANVAS LINK ── */
+  .canvas-link {
+    color: inherit; text-decoration: none;
+    border-bottom: 1.5px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  .canvas-link:hover { color: var(--sage-dk); border-bottom-color: var(--pink); }
+  .canvas-link::after { content: ' ↗'; font-size: .7em; opacity: .4; transition: opacity .15s; }
+  .canvas-link:hover::after { opacity: 1; }
+
+  .grades-canvas-btn {
+    display: inline-flex; align-items: center; gap: .45rem;
+    margin-top: 1.5rem; padding: .58rem 1.3rem;
+    font-size: .78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, var(--sage-dk), var(--sage));
+    border: none; border-radius: .3rem; font-family: inherit;
+    text-decoration: none;
+    box-shadow: 0 3px 16px rgba(116,160,137,.35);
+    transition: box-shadow .15s, transform .15s;
+  }
+  .grades-canvas-btn:hover {
+    box-shadow: 0 6px 24px rgba(116,160,137,.52); transform: translateY(-1px);
+  }
+
+  /* ── COURSE INFO ── */
+  #info { background: var(--bg2); }
+  .info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: .6rem; overflow: hidden;
+  }
+  .info-cell { background: var(--surface); padding: 1.25rem 1.5rem; }
+  .info-cell-label {
+    font-size: .67rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--sage-dk); font-weight: 700; margin-bottom: .3rem;
+  }
+  .info-cell-value { font-size: .95rem; font-weight: 600; color: var(--text); }
+  .info-cell-value a { color: var(--sage-dk); text-decoration: none; }
+  .info-cell-value a:hover { text-decoration: underline; }
+
+  /* ── MODULES ── */
+  #modules { background: var(--bg); }
+  .module-cards {
+    display: flex; flex-direction: column;
+    border: 1px solid var(--border); border-radius: .75rem; overflow: hidden;
+  }
+  .module-card {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background .2s; cursor: pointer;
+  }
+  .module-card:last-child { border-bottom: none; }
+  .module-card:hover { background: var(--bg3); }
+
+  /* Solid left border — all three palette colors + gold */
+  .module-card:nth-child(1) { border-left: 4px solid var(--pink); }
+  .module-card:nth-child(2) { border-left: 4px solid var(--lav-dk); }
+  .module-card:nth-child(3) { border-left: 4px solid var(--sage); }
+  .module-card:nth-child(4) { border-left: 4px solid var(--gold-dk); }
+  .module-card:nth-child(5) { border-left: 4px solid var(--pink-dk); }
+
+  .module-header {
+    display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem;
+  }
+  .module-num {
+    width: 36px; height: 36px; border-radius: .35rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 800; flex-shrink: 0;
+  }
+  /* Solid filled chips — vivid on warm cream */
+  .module-card:nth-child(1) .module-num { background: var(--pink);    color: #6B1850; }
+  .module-card:nth-child(2) .module-num { background: var(--lav-dk);  color: #fff;    }
+  .module-card:nth-child(3) .module-num { background: var(--sage);    color: #fff;    }
+  .module-card:nth-child(4) .module-num { background: var(--gold);    color: #5A3A00; }
+  .module-card:nth-child(5) .module-num { background: var(--pink-dk); color: #fff;    }
+
+  .module-meta { flex: 1; }
+  .module-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+  .module-hook { font-size: .82rem; color: var(--muted); margin-top: .15rem; }
+  .module-badge {
+    display: inline-block;
+    font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--gold); color: #5A3A00;
+    padding: .16rem .48rem; border-radius: .2rem; margin-left: .5rem; vertical-align: middle;
+  }
+  .module-toggle { color: var(--muted); font-size: 1.1rem; transition: transform .3s; user-select: none; }
+  .module-card.open .module-toggle { transform: rotate(180deg); }
+
+  .module-topics {
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .3s;
+    padding: 0 1.5rem 0 3.5rem;
+  }
+  .module-card.open .module-topics { max-height: 600px; padding-bottom: 1.25rem; }
+  .topic-list { display: flex; flex-direction: column; gap: .5rem; }
+  .topic-item {
+    display: flex; align-items: flex-start; gap: .75rem;
+    font-size: .85rem; padding: .4rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .topic-item:first-child { border-top: none; }
+  .topic-num {
+    font-size: .7rem; font-weight: 700; color: var(--muted);
+    background: var(--bg3); border-radius: .2rem;
+    padding: .1rem .4rem; flex-shrink: 0; margin-top: .1rem;
+  }
+  .topic-text { color: var(--text); }
+
+  /* ── OBJECTIVES ── */
+  #objectives { background: var(--bg2); }
+  .objectives-text {
+    display: flex; flex-direction: column; gap: 1.25rem;
+    font-size: .92rem; color: var(--muted); line-height: 1.85; max-width: 720px;
+  }
+  .objectives-text strong { color: var(--text); font-weight: 600; }
+
+  /* ── ASSESSMENTS ── */
+  #assessments { background: var(--bg); }
+  .assessment-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 1.25rem;
+  }
+  .assessment-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: .6rem;
+    padding: 1.5rem; border-top-width: 4px;
+  }
+  /* Top border in a palette color per card */
+  .assessment-card:nth-child(1) { border-top-color: var(--sage); }
+  .assessment-card:nth-child(2) { border-top-color: var(--pink); }
+  .assessment-card:nth-child(3) { border-top-color: var(--lav-dk); }
+  .assessment-card:nth-child(4) { border-top-color: var(--gold-dk); }
+  .assessment-card:nth-child(5) { border-top-color: var(--pink-dk); }
+  .assessment-card:nth-child(6) { border-top-color: var(--sage-dk); }
+
+  .assessment-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 1rem; gap: .75rem;
+  }
+  .assessment-card-left { display: flex; align-items: center; gap: .75rem; }
+  .assessment-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .assessment-title { font-size: .95rem; font-weight: 800; color: var(--text); }
+
+  /* Solid sage weight badge */
+  .assessment-weight {
+    font-size: .73rem; font-weight: 700; color: #fff;
+    background: var(--sage);
+    padding: .22rem .58rem; border-radius: 2rem;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .assessment-body { font-size: .82rem; color: var(--muted); line-height: 1.7; }
+  .assessment-body strong { color: var(--text); font-weight: 600; }
+
+  /* ── GRADING ── */
+  #grading { background: var(--bg2); }
+  .grading-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start;
+  }
+  @media (max-width: 600px) { .grading-layout { grid-template-columns: 1fr; } }
+  .grade-bars { display: flex; flex-direction: column; gap: 1.1rem; }
+  .grade-bar-label { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: .45rem; }
+  .grade-bar-name { color: var(--text); font-weight: 500; }
+  .grade-bar-pct  { color: var(--muted); font-weight: 600; }
+  .grade-bar-track {
+    height: 9px; background: var(--bg3); border-radius: 5px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  /* Sage → pink: the two warm palette colors blend beautifully */
+  .grade-bar-fill {
+    height: 100%; border-radius: 5px;
+    background: linear-gradient(90deg, var(--sage), var(--pink));
+    width: 0; transition: width 1.1s cubic-bezier(.4,0,.2,1);
+  }
+  .grade-scale-title {
+    font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1rem;
+  }
+  .grade-scale-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: .4rem; overflow: hidden;
+    font-size: .82rem;
+  }
+  .gs-cell {
+    background: var(--surface); padding: .48rem .75rem;
+    display: flex; justify-content: space-between;
+  }
+  .gs-cell:nth-child(4n+1), .gs-cell:nth-child(4n+2) { background: var(--bg3); }
+  .gs-grade { font-weight: 800; color: var(--sage-dk); }   /* sage grade letters */
+  .gs-range  { color: var(--muted); }
+
+  /* ── TEXTBOOK ── */
+  #textbook { background: var(--bg); }
+  .book-card {
+    display: flex; gap: 2rem; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: .75rem;
+    padding: 2rem; border-left: 5px solid var(--sage);
+  }
+  .book-icon    { font-size: 3rem; flex-shrink: 0; }
+  .book-title   { font-size: 1.05rem; font-weight: 700; margin-bottom: .4rem; color: var(--text); }
+  .book-authors { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
+  .book-isbns   { display: flex; flex-direction: column; gap: .25rem; }
+  .isbn-row     { font-size: .8rem; }
+  .isbn-label   { color: var(--muted); }
+  .isbn-val     { color: var(--text); font-family: monospace; }
+  .book-note    { margin-top: .75rem; font-size: .8rem; color: var(--muted); font-style: italic; }
+
+  /* ── POLICIES ── */
+  #policies { background: var(--bg2); }
+  .policy-block { margin-bottom: 3rem; }
+  .policy-block:last-child { margin-bottom: 0; }
+  .policy-heading {
+    font-size: .7rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--sage-dk); margin-bottom: .75rem;
+    padding-bottom: .5rem; border-bottom: 2px solid var(--border);
+  }
+  .policy-text { font-size: .88rem; color: var(--muted); line-height: 1.75; }
+  .policy-quote {
+    margin: 1.25rem 0; padding: 1rem 1.5rem;
+    border-left: 5px solid var(--gold);          /* golden — warm, rich */
+    background: rgba(250,215,123,.14); border-radius: 0 .4rem .4rem 0;
+    font-style: italic; color: var(--text); font-size: .9rem;
+  }
+
+  /* ── FOOTER — dark warm anchor ── */
+  footer {
+    background: #2C1E14;
+    padding: 2.5rem 2rem; text-align: center;
+    font-size: .78rem; color: rgba(240,220,200,.55);
+  }
+  footer a { color: rgba(240,220,200,.75); }
+  footer strong { color: rgba(240,220,200,.92); }
+
+  /* ── PRINT BUTTON ── */
+  .print-fab {
+    position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 200;
+    background: linear-gradient(135deg, var(--sage-dk), var(--sage));
+    color: #fff; border: none; border-radius: 2rem;
+    padding: .6rem 1.25rem;
+    font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    cursor: pointer; display: flex; align-items: center; gap: .45rem;
+    box-shadow: 0 4px 20px rgba(116,160,137,.38);
+    transition: transform .15s, box-shadow .15s;
+    font-family: inherit;
+  }
+  .print-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(116,160,137,.55); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .d1 { transition-delay: .1s; }
+  .d2 { transition-delay: .2s; }
+  .d3 { transition-delay: .3s; }
+  .d4 { transition-delay: .4s; }
+
+  /* ── IFRAME / CANVAS EMBED ── */
+  .in-iframe nav            { display: none !important; }
+  /* print-fab stays visible when embedded in Canvas so students can print / save as PDF from inside the course */
+  .in-iframe .hero-bg       { display: none; }
+  .in-iframe .grid-lines    { display: none; }
+  .in-iframe .hero-question { display: none; }
+  .in-iframe #hero { min-height: auto; padding: 2.5rem 2rem 2rem; }
+  .in-iframe .hero-pills    { margin-top: 1.5rem; }
+
+  /* ── PRINT ── */
+  @media print {
+    nav, .print-fab, .hero-cta, .hero-pills, .hero-question, .grid-lines, .hero-bg { display: none !important; }
+    body { background: #fff !important; color: #000 !important; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #hero { min-height: auto; padding: 2rem 1rem 1.5rem; }
+    .hero-title { -webkit-text-fill-color: #2C1E14 !important; background: none !important; color: #2C1E14 !important; font-size: 3rem !important; }
+    section { padding: 1.5rem 1rem; }
+    .section-inner { max-width: 100%; }
+    .module-topics { max-height: none !important; padding-bottom: 1rem !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    * { box-shadow: none !important; animation: none !important; transition: none !important; }
+    a { color: inherit !important; }
+    .canvas-link::after { display: none; }
+    .grades-canvas-btn { display: none; }
+    footer { background: #2C1E14 !important; }
+    .info-grid, .module-cards, .grade-scale-grid, .assessment-grid { break-inside: avoid; }
+    /* Keep each heading with the content that follows it, and keep individual
+       cards/blocks from being sliced across a page boundary. */
+    .section-tag, .section-title { break-after: avoid; page-break-after: avoid; }
+    .info-cell, .module-card, .assessment-card, .policy-block, .book-card {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    .objectives-text p, .policy-text { orphans: 3; widows: 3; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-fab" onclick="window.print()">🖨 Print / Save PDF</button>
+
+<nav>
+  <div class="nav-brand">ECON 3204 · Fall 2026</div>
+  <div class="nav-links">
+    <a href="#modules">Modules</a>
+    <a href="#objectives">Objectives</a>
+    <a href="#assessments">Assessments</a>
+    <a href="#grading">Grading</a>
+    <a href="#textbook">Textbook</a>
+    <a href="#policies">Policies</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-lines"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Virginia Tech · Macroeconomic Theory</div>
+    <h1 class="hero-title">ECON 3204</h1>
+    <p class="hero-subtitle">How income, employment, inflation, and growth play out across the short, medium, and long run.</p>
+    <div class="hero-question">
+      <span id="typed-text"></span><span class="typed-cursor"></span>
+    </div>
+    <div class="hero-cta">
+      <a href="#modules" class="btn btn-primary">Explore the Course</a>
+    </div>
+    <div class="hero-pills">
+      <div class="pill">Tue &amp; Thu <span>3:30 – 4:45 PM</span></div>
+      <div class="pill"><span>Saunders 408</span> · In Person</div>
+      <div class="pill">Prereq: <span>ECON 2006 &amp; 3104</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- COURSE INFO -->
+<section id="info">
+  <div class="section-inner">
+    <div class="section-tag reveal">Course Info</div>
+    <h2 class="section-title reveal d1">Everything you need, up front.</h2>
+    <div class="info-grid reveal d2">
+      <div class="info-cell">
+        <div class="info-cell-label">Instructor</div>
+        <div class="info-cell-value">Koustuv Lahiri</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Email</div>
+        <div class="info-cell-value"><a href="mailto:lkoustuv@vt.edu">lkoustuv@vt.edu</a></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Class Time</div>
+        <div class="info-cell-value">Tue &amp; Thu · 3:30 – 4:45 PM</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Classroom</div>
+        <div class="info-cell-value">Saunders 408</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Canvas</div>
+        <div class="info-cell-value"><a href="https://canvas.vt.edu/courses/234668" target="_blank">canvas.vt.edu/courses/234668 →</a></div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Final Exam</div>
+        <div class="info-cell-value">Dec 16 · 1:05 – 3:05 PM</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Office Hours</div>
+        <div class="info-cell-value">Wed · 11:00 AM – 1:00 PM</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Prerequisite</div>
+        <div class="info-cell-value">ECON 2006 &amp; ECON 3104</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Textbook</div>
+        <div class="info-cell-value">
+          <a href="#textbook">Olivier Blanchard<br><span style="font-size:.72em; font-weight:500; color:var(--muted);">Macroeconomics (Global Edn)</span></a>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:1rem; font-size:.82rem; color:var(--muted);" class="reveal d3">
+      All course materials — lectures, handouts, and announcements — are posted on Canvas. Check Canvas and your email regularly.
+    </p>
+  </div>
+</section>
+
+<!-- MODULES -->
+<!-- NOTE: Replace href on each canvas-link with the specific module URL once
+     Canvas modules are published:
+     https://canvas.vt.edu/courses/234668/modules/[MODULE_ID] -->
+<section id="modules">
+  <div class="section-inner">
+    <div class="section-tag reveal">The Journey</div>
+    <h2 class="section-title reveal d1">Short run, medium run, long run.</h2>
+
+    <div class="module-cards reveal d2">
+
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div class="module-num">M1</div>
+          <div class="module-meta">
+            <div class="module-name">
+              <a href="https://canvas.vt.edu/courses/234668/modules" target="_blank"
+                 class="canvas-link" onclick="event.stopPropagation()">
+                The Short Run
+              </a>
+            </div>
+            <div class="module-hook">How do output and interest rates move together when demand shifts?</div>
+          </div>
+          <div class="module-toggle">▾</div>
+        </div>
+        <div class="module-topics">
+          <div class="topic-list">
+            <div class="topic-item"><span class="topic-num">01</span><span class="topic-text">The Goods Market</span></div>
+            <div class="topic-item"><span class="topic-num">02</span><span class="topic-text">The Financial Markets</span></div>
+            <div class="topic-item"><span class="topic-num">03</span><span class="topic-text">The IS-LM Model</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div class="module-num">M2</div>
+          <div class="module-meta">
+            <div class="module-name">
+              <a href="https://canvas.vt.edu/courses/234668/modules" target="_blank"
+                 class="canvas-link" onclick="event.stopPropagation()">
+                The Medium Run
+              </a>
+            </div>
+            <div class="module-hook">What ties unemployment, inflation, and output together once wages catch up?</div>
+          </div>
+          <div class="module-toggle">▾</div>
+        </div>
+        <div class="module-topics">
+          <div class="topic-list">
+            <div class="topic-item"><span class="topic-num">04</span><span class="topic-text">From Short to Medium Run</span></div>
+            <div class="topic-item"><span class="topic-num">05</span><span class="topic-text">The Labor Market</span></div>
+            <div class="topic-item"><span class="topic-num">06</span><span class="topic-text">Unemployment and Inflation</span></div>
+            <div class="topic-item"><span class="topic-num">07</span><span class="topic-text">The IS-LM-PC Model</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div class="module-num">M3</div>
+          <div class="module-meta">
+            <div class="module-name">
+              <a href="https://canvas.vt.edu/courses/234668/modules" target="_blank"
+                 class="canvas-link" onclick="event.stopPropagation()">
+                The Long Run
+              </a>
+            </div>
+            <div class="module-hook">Why do some economies keep growing while others stagnate?</div>
+          </div>
+          <div class="module-toggle">▾</div>
+        </div>
+        <div class="module-topics">
+          <div class="topic-list">
+            <div class="topic-item"><span class="topic-num">08</span><span class="topic-text">The Facts of Growth</span></div>
+            <div class="topic-item"><span class="topic-num">09</span><span class="topic-text">The Solow Growth Model</span></div>
+            <div class="topic-item"><span class="topic-num">10</span><span class="topic-text">The Overlapping Generations (OLG) Model</span></div>
+            <div class="topic-item"><span class="topic-num">11</span><span class="topic-text">Technological Progress and Institutions</span></div>
+            <div class="topic-item"><span class="topic-num">12</span><span class="topic-text">The Challenges of Growth</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- OBJECTIVES -->
+<section id="objectives">
+  <div class="section-inner">
+    <div class="section-tag reveal">By the End of the Course</div>
+    <h2 class="section-title reveal d1">What you'll be able to do.</h2>
+    <div class="objectives-text reveal d2">
+      <p>You'll be able to understand and apply core macroeconomic models to analyze the behavior of the aggregate economy over time, and measure key economic indicators, including GDP, unemployment, and inflation, using multiple approaches, then interpret what they mean for economic performance and policy.</p>
+      <p>You'll gain proficiency in analyzing the short-run functioning of the economy with the <strong>IS-LM model</strong>, the medium-run dynamics of inflation and output with the <strong>IS-LM-Phillips Curve (IS-LM-PC) model</strong>, and the long-run determinants of growth with the <strong>Solow Growth model</strong>. You'll also explore the <strong>Overlapping Generations (OLG) model</strong>, which gives a microeconomic foundation for saving behavior and intertemporal decision-making.</p>
+      <p>The goal is to build your ability to think analytically about macroeconomic issues, use formal models to explain real-world phenomena, and evaluate the implications of different policy interventions, while strengthening how you communicate economic reasoning through both mathematical and graphical tools.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ASSESSMENTS -->
+<!-- NOTE: Replace href on each assessment canvas-link with the direct assignment URL
+     once created in Canvas:
+     https://canvas.vt.edu/courses/234668/assignments/[ASSIGNMENT_ID] -->
+<section id="assessments">
+  <div class="section-inner">
+    <div class="section-tag reveal">Assessments</div>
+    <h2 class="section-title reveal d1">How you'll be evaluated.</h2>
+    <div class="assessment-grid reveal d2">
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">📋</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Final Exam
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">30%</div>
+        </div>
+        <div class="assessment-body">
+          Comprehensive, covering material from the entire course. <strong>Tuesday, December 16, 1:05 – 3:05 PM</strong>, in the classroom (Saunders 408). Taken on Canvas.
+        </div>
+      </div>
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">📝</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Midterm 1
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">15%</div>
+        </div>
+        <div class="assessment-body">
+          Covers material from Module 1 (The Short Run). Held during class and taken on Canvas. <strong>You must be present.</strong> Exact date announced on Canvas at least one week in advance.
+        </div>
+      </div>
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">📝</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Midterm 2
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">15%</div>
+        </div>
+        <div class="assessment-body">
+          Covers material from Module 2 (The Medium Run). Held during class and taken on Canvas. <strong>You must be present.</strong> Exact date announced on Canvas at least one week in advance.
+        </div>
+      </div>
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">📚</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Homework
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">20%</div>
+        </div>
+        <div class="assessment-body">
+          Assigned regularly throughout the semester and submitted online via Canvas. <strong>Late submissions are not accepted.</strong>
+        </div>
+      </div>
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">💻</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Quizzes
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">10%</div>
+        </div>
+        <div class="assessment-body">
+          One quiz most weeks, held during class. <strong>You must be present</strong> to take it, and it's completed on Canvas. Exact dates announced on Canvas and in lecture.
+        </div>
+      </div>
+
+      <div class="assessment-card">
+        <div class="assessment-card-header">
+          <div class="assessment-card-left">
+            <div class="assessment-icon">🗂️</div>
+            <div class="assessment-title">
+              <a href="https://canvas.vt.edu/courses/234668/assignments" target="_blank" class="canvas-link">
+                Project
+              </a>
+            </div>
+          </div>
+          <div class="assessment-weight">10%</div>
+        </div>
+        <div class="assessment-body">
+          An individual project completed over the semester. Submit a written report on Canvas by the deadline. Detailed instructions announced on Canvas and in lecture.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- GRADING -->
+<section id="grading">
+  <div class="section-inner">
+    <div class="section-tag reveal">Grading</div>
+    <h2 class="section-title reveal d1">How your grade is built.</h2>
+    <div class="grading-layout">
+      <div class="grade-bars reveal d2">
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Final Exam</span><span class="grade-bar-pct">30%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="30"></div></div>
+        </div>
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Midterm 1</span><span class="grade-bar-pct">15%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="15"></div></div>
+        </div>
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Midterm 2</span><span class="grade-bar-pct">15%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="15"></div></div>
+        </div>
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Homework</span><span class="grade-bar-pct">20%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="20"></div></div>
+        </div>
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Quizzes</span><span class="grade-bar-pct">10%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="10"></div></div>
+        </div>
+        <div class="grade-bar-item">
+          <div class="grade-bar-label"><span class="grade-bar-name">Project</span><span class="grade-bar-pct">10%</span></div>
+          <div class="grade-bar-track"><div class="grade-bar-fill" data-width="10"></div></div>
+        </div>
+        <p style="margin-top:1rem; font-size:.8rem; color:var(--muted);">Total: 100%. See the Assessments section above for details on each component.</p>
+        <a href="https://canvas.vt.edu/courses/234668/grades" target="_blank" class="grades-canvas-btn">
+          📊 View My Grades in Canvas →
+        </a>
+      </div>
+      <div class="reveal d3">
+        <div class="grade-scale-title">Grading Scale</div>
+        <div class="grade-scale-grid">
+          <div class="gs-cell"><span class="gs-grade">A</span><span class="gs-range">95–100</span></div>
+          <div class="gs-cell"><span class="gs-grade">A−</span><span class="gs-range">90–94.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">B+</span><span class="gs-range">85–89.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">B</span><span class="gs-range">80–84.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">B−</span><span class="gs-range">75–79.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">C+</span><span class="gs-range">70–74.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">C</span><span class="gs-range">65–69.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">C−</span><span class="gs-range">60–64.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">D+</span><span class="gs-range">55–59.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">D</span><span class="gs-range">50–54.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">D−</span><span class="gs-range">45–49.9</span></div>
+          <div class="gs-cell"><span class="gs-grade">F</span><span class="gs-range">&lt; 45</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEXTBOOK -->
+<section id="textbook">
+  <div class="section-inner">
+    <div class="section-tag reveal">Required Text</div>
+    <h2 class="section-title reveal d1">The book.</h2>
+    <div class="book-card reveal d2">
+      <div class="book-icon">📘</div>
+      <div>
+        <div class="book-title">Macroeconomics, Global Edition (8th Edition or above)</div>
+        <div class="book-authors">Olivier Blanchard · Pearson</div>
+        <div class="book-isbns">
+          <div class="isbn-row"><span class="isbn-label">9th ed. ISBN: </span><span class="isbn-val">9780138119010</span></div>
+          <div class="isbn-row"><span class="isbn-label">8th ed. ISBN: </span><span class="isbn-val">9780136713883</span></div>
+        </div>
+        <div class="book-note">Consult the relevant chapters alongside each module topic. Lectures, handouts, and supplemental materials are posted on Canvas — my lectures often go beyond the textbook, so showing up matters.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POLICIES -->
+<section id="policies">
+  <div class="section-inner">
+    <div class="section-tag reveal">Policies</div>
+    <h2 class="section-title reveal d1">The fine print.<br><span style="font-weight:400; color:var(--muted)">But actually important.</span></h2>
+
+    <div class="policy-block reveal d2">
+      <div class="policy-heading">Attendance</div>
+      <p class="policy-text">Class attendance is encouraged. I will not be taking regular attendance, but you are responsible for all information covered in class lectures.</p>
+    </div>
+
+    <div class="policy-block reveal d2">
+      <div class="policy-heading">Missed Exams &amp; Quizzes</div>
+      <p class="policy-text">Students are expected to attend all exams and quizzes, as there will be no make-up opportunities. If the Midterm or a quiz is missed due to unavoidable reasons such as illness, I may consider adjustments based on the specific circumstances. This requires submission of valid documentation to support your case.</p>
+    </div>
+
+    <div class="policy-block reveal d2">
+      <div class="policy-heading">Academic Accommodations</div>
+      <p class="policy-text">Virginia Tech welcomes students with disabilities into the University's educational programs. The University promotes efforts to provide equal access and a culture of inclusion without altering the essential elements of coursework. If you anticipate or experience academic barriers that may be due to disability, including but not limited to ADHD, chronic or temporary medical conditions, deaf or hard of hearing, learning disability, mental health, or vision impairment, please contact the Services for Students with Disabilities (SSD) office at <strong style="color:var(--text)">540-231-3788</strong>, <a href="mailto:ssd@vt.edu" style="color:var(--sage-dk)">ssd@vt.edu</a>, or visit <a href="https://ssd.vt.edu" target="_blank" style="color:var(--sage-dk)">ssd.vt.edu</a>.</p>
+      <p class="policy-text" style="margin-top:.75rem;">If you have an SSD accommodation letter, please meet with me during office hours as early in the semester as possible to deliver your letter and discuss your accommodation. You must give me reasonable notice to implement your accommodation, which is at least a week before each exam. If there are aspects of this course that prevent you from learning or exclude you, please let me know as soon as possible. Together, we will develop strategies to meet both your needs and the requirements of the course.</p>
+    </div>
+
+    <div class="policy-block reveal d3">
+      <div class="policy-heading">Honor Code</div>
+      <div class="policy-quote">"As a Hokie, I will conduct myself with honor and integrity at all times. I will not lie, cheat, or steal, nor will I accept the actions of those who do."</div>
+      <p class="policy-text">Students enrolled in this course are responsible for abiding by the Honor Code. A student who has doubts about how the Honor Code applies to any assignment is responsible for obtaining specific guidance from the course instructor before submitting the assignment for evaluation. Students are strongly discouraged from misusing sites such as Chegg and CourseHero, as well as misusing ChatGPT and other Generative Artificial Intelligence. Students are strongly encouraged to consult their faculty members regarding the use of such outside materials, as the misuse of these sources may constitute a violation of the Honor Code. Ignorance of the rules does not exempt any member of the University community from the requirements and expectations of the Honor Code.</p>
+      <p class="policy-text" style="margin-top:.75rem;">For more information: <a href="https://www.honorsystem.vt.edu/" target="_blank" style="color:var(--sage-dk)">honorsystem.vt.edu →</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER — warm dark -->
+<footer>
+  <p><strong>ECON 3204 · Macroeconomic Theory · Fall 2026 · Virginia Tech</strong></p>
+  <p style="margin-top:.4rem;">Koustuv Lahiri · <a href="mailto:lkoustuv@vt.edu">lkoustuv@vt.edu</a></p>
+</footer>
+
+<script>
+  // ── Typewriter ────────────────────────────────────────────────────────────
+  const questions = [
+    "Why does the IS-LM model still matter?",
+    "Can monetary policy actually end a recession?",
+    "Why does the Phillips Curve keep shifting?",
+    "What really drives growth in the long run?",
+    "Why do some countries stay poor for generations?",
+    "How much should you save for the future — and why?",
+  ];
+  let qi = 0, ci = 0, deleting = false;
+  const el = document.getElementById('typed-text');
+  if (el) {
+    function type() {
+      const q = questions[qi];
+      if (!deleting) {
+        el.textContent = q.slice(0, ++ci);
+        if (ci === q.length) { deleting = true; setTimeout(type, 2000); return; }
+      } else {
+        el.textContent = q.slice(0, --ci);
+        if (ci === 0) { deleting = false; qi = (qi + 1) % questions.length; }
+      }
+      setTimeout(type, deleting ? 35 : 60);
+    }
+    setTimeout(type, 1200);
+  }
+
+  // ── Scroll reveal ─────────────────────────────────────────────────────────
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => revealObs.observe(el));
+
+  // ── Grade bar animations ──────────────────────────────────────────────────
+  const barEls = document.querySelectorAll('.grade-bar-fill');
+  const barObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const w = e.target.dataset.width;
+      setTimeout(() => { e.target.style.width = w + '%'; }, 200);
+      barObs.unobserve(e.target);
+    });
+  }, { threshold: 0.3 });
+  barEls.forEach(el => barObs.observe(el));
+
+  // ── Module toggle ─────────────────────────────────────────────────────────
+  function toggleModule(card) { card.classList.toggle('open'); }
+</script>
+
+</body>
+</html>
