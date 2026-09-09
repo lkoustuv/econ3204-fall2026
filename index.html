@@ -495,10 +495,17 @@
     .canvas-link::after { display: none; }
     .grades-canvas-btn { display: none; }
     footer { background: #2C1E14 !important; }
-    .info-grid, .module-cards, .grade-scale-grid, .assessment-grid { break-inside: avoid; }
-    /* Keep each heading with the content that follows it, and keep individual
-       cards/blocks from being sliced across a page boundary. */
-    .section-tag, .section-title { break-after: avoid; page-break-after: avoid; }
+    /* Keep the small tag + heading pair for each section glued together as
+       one unit, so a page break can never land between them (this previously
+       caused an orphaned tag at the bottom of a page with the heading
+       stranded at the top of the next). Individual cards/blocks are kept
+       from being sliced across a page boundary, but the grid/list containers
+       that hold them are intentionally NOT marked break-inside:avoid — that
+       let the whole (often multi-page-tall) container get shoved onto the
+       next page as a unit, producing large blank gaps. Letting the
+       container break between cards, while each card stays intact, gives
+       much cleaner pagination.  */
+    .section-head { break-inside: avoid; page-break-inside: avoid; }
     .info-cell, .module-card, .assessment-card, .policy-block, .book-card {
       break-inside: avoid; page-break-inside: avoid;
     }
@@ -547,8 +554,10 @@
 <!-- COURSE INFO -->
 <section id="info">
   <div class="section-inner">
-    <div class="section-tag reveal">Course Info</div>
-    <h2 class="section-title reveal d1">Everything you need, up front.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">Course Info</div>
+      <h2 class="section-title reveal d1">Everything you need, up front.</h2>
+    </div>
     <div class="info-grid reveal d2">
       <div class="info-cell">
         <div class="info-cell-label">Instructor</div>
@@ -576,7 +585,7 @@
       </div>
       <div class="info-cell">
         <div class="info-cell-label">Office Hours</div>
-        <div class="info-cell-value">Wed · 11:00 AM – 1:00 PM<br><span style="font-size:.72em; font-weight:500; color:var(--muted);">Pamplin 3055</span></div>
+        <div class="info-cell-value">Wed · 12:05 – 2:05 PM<br><span style="font-size:.72em; font-weight:500; color:var(--muted);">Pamplin 3055</span></div>
       </div>
       <div class="info-cell">
         <div class="info-cell-label">Prerequisite</div>
@@ -601,8 +610,10 @@
      https://canvas.vt.edu/courses/234668/modules/[MODULE_ID] -->
 <section id="modules">
   <div class="section-inner">
-    <div class="section-tag reveal">The Journey</div>
-    <h2 class="section-title reveal d1">Short run, medium run, long run.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">The Journey</div>
+      <h2 class="section-title reveal d1">Short run, medium run, long run.</h2>
+    </div>
 
     <div class="module-cards reveal d2">
 
@@ -685,8 +696,10 @@
 <!-- OBJECTIVES -->
 <section id="objectives">
   <div class="section-inner">
-    <div class="section-tag reveal">By the End of the Course</div>
-    <h2 class="section-title reveal d1">What you'll be able to do.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">By the End of the Course</div>
+      <h2 class="section-title reveal d1">What you'll be able to do.</h2>
+    </div>
     <div class="objectives-text reveal d2">
       <p>You'll be able to understand and apply core macroeconomic models to analyze the behavior of the aggregate economy over time, and measure key economic indicators, including GDP, unemployment, and inflation, using multiple approaches, then interpret what they mean for economic performance and policy.</p>
       <p>You'll gain proficiency in analyzing the short-run functioning of the economy with the <strong>IS-LM model</strong>, the medium-run dynamics of inflation and output with the <strong>IS-LM-Phillips Curve (IS-LM-PC) model</strong>, and the long-run determinants of growth with the <strong>Solow Growth model</strong>. You'll also explore the <strong>Overlapping Generations (OLG) model</strong>, which gives a microeconomic foundation for saving behavior and intertemporal decision-making.</p>
@@ -701,8 +714,10 @@
      https://canvas.vt.edu/courses/234668/assignments/[ASSIGNMENT_ID] -->
 <section id="assessments">
   <div class="section-inner">
-    <div class="section-tag reveal">Assessments</div>
-    <h2 class="section-title reveal d1">How you'll be evaluated.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">Assessments</div>
+      <h2 class="section-title reveal d1">How you'll be evaluated.</h2>
+    </div>
     <div class="assessment-grid reveal d2">
 
       <div class="assessment-card">
@@ -814,8 +829,10 @@
 <!-- GRADING -->
 <section id="grading">
   <div class="section-inner">
-    <div class="section-tag reveal">Grading</div>
-    <h2 class="section-title reveal d1">How your grade is built.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">Grading</div>
+      <h2 class="section-title reveal d1">How your grade is built.</h2>
+    </div>
     <div class="grading-layout">
       <div class="grade-bars reveal d2">
         <div class="grade-bar-item">
@@ -871,8 +888,10 @@
 <!-- TEXTBOOK -->
 <section id="textbook">
   <div class="section-inner">
-    <div class="section-tag reveal">Required Text</div>
-    <h2 class="section-title reveal d1">The book.</h2>
+    <div class="section-head">
+      <div class="section-tag reveal">Required Text</div>
+      <h2 class="section-title reveal d1">The book.</h2>
+    </div>
     <div class="book-card reveal d2">
       <div class="book-icon">📘</div>
       <div>
@@ -891,8 +910,10 @@
 <!-- POLICIES -->
 <section id="policies">
   <div class="section-inner">
-    <div class="section-tag reveal">Policies</div>
-    <h2 class="section-title reveal d1">The fine print.<br><span style="font-weight:400; color:var(--muted)">But actually important.</span></h2>
+    <div class="section-head">
+      <div class="section-tag reveal">Policies</div>
+      <h2 class="section-title reveal d1">The fine print.<br><span style="font-weight:400; color:var(--muted)">But actually important.</span></h2>
+    </div>
 
     <div class="policy-block reveal d2">
       <div class="policy-heading">Attendance</div>
