@@ -325,6 +325,14 @@
   }
   .objectives-text strong { color: var(--text); font-weight: 600; }
 
+  /* ── COURSE DESCRIPTION ── */
+  /* Same prose treatment as Objectives, but full section width (no 720px
+     cap) so its measure matches the Policies section directly below it. */
+  .description-text {
+    display: flex; flex-direction: column; gap: 1.25rem;
+    font-size: .92rem; color: var(--muted); line-height: 1.85;
+  }
+
   /* ── ASSESSMENTS ── */
   #assessments { background: var(--bg); }
   .assessment-grid {
@@ -415,8 +423,11 @@
   .isbn-val     { color: var(--text); font-family: monospace; }
   .book-note    { margin-top: .75rem; font-size: .8rem; color: var(--muted); font-style: italic; }
 
+  /* ── COURSE DESCRIPTION ── */
+  #description { background: var(--bg2); }
+
   /* ── POLICIES ── */
-  #policies { background: var(--bg2); }
+  #policies { background: var(--bg); }
   .policy-block { margin-bottom: 3rem; }
   .policy-block:last-child { margin-bottom: 0; }
   .policy-heading {
@@ -509,7 +520,7 @@
     .info-cell, .module-card, .assessment-card, .policy-block, .book-card {
       break-inside: avoid; page-break-inside: avoid;
     }
-    .objectives-text p, .policy-text { orphans: 3; widows: 3; }
+    .objectives-text p, .description-text p, .policy-text { orphans: 3; widows: 3; }
   }
 </style>
 </head>
@@ -903,6 +914,19 @@
         </div>
         <div class="book-note">Consult the relevant chapters alongside each module topic. Lectures, handouts, and supplemental materials are posted on Canvas — my lectures often go beyond the textbook, so showing up matters.</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- COURSE DESCRIPTION -->
+<section id="description">
+  <div class="section-inner">
+    <div class="section-head">
+      <div class="section-tag reveal">Course Description</div>
+      <h2 class="section-title reveal d1">What this course is about.</h2>
+    </div>
+    <div class="description-text reveal d2">
+      <p>Analytical exploration of the determinants of aggregate economic activity, focusing on national income, employment, price levels, and interest rates. Application of microeconomic optimization techniques to macroeconomic models and policy evaluation. Economic modeling of the interactions among households, firms, and policies in a general equilibrium setting. The roles of monetary and fiscal policy in influencing macroeconomic outcomes. Practical applications of macroeconomic models to current economic phenomena.</p>
     </div>
   </div>
 </section>
