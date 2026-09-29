@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
-<title>The Short-Run Lab</title>
+<title>The IS-LM Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
 /* Layout: masthead; a two-column workbench (control rail | linked figure + readouts);
    then algebra and the change ledger side by side. A bright, cool "lab instrument" look:
    drafting-grid diagrams, one hue per market role, amber reserved for "what just moved". */
@@ -141,18 +142,41 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
 .result p{ margin:0; font-size:14px; }
 .take{ margin:0; color:var(--mut); font-size:13.5px; }
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+
+.kpi .v{ font-size:18px; }
+@media (max-width:900px){ .kpis{ grid-template-columns:repeat(4, minmax(0,1fr)) !important; } }
+@media (max-width:560px){ .kpis{ grid-template-columns:repeat(2, minmax(0,1fr)) !important; } }
+.ext .scen button{ flex-direction:column; align-items:flex-start; gap:2px; }
+.seg{ display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
+.seg button{ border:none; border-radius:0; background:var(--panel); font-size:12.5px; padding:7px 6px; color:var(--mut); }
+.seg button[aria-pressed="true"]{ background:var(--policy); color:#fff; }
+.seg.fw{ border-color:var(--ink); }
+.seg.fw button{ font-size:13.5px; font-weight:600; padding:10px 6px; }
+.seg.fw button[aria-pressed="true"]{ background:var(--ink); color:var(--panel); }
+[hidden]{ display:none !important; }
+.rail > *{ order:4; }
+.rail > .grp:first-child{ order:0; }
+.segnote{ margin:0; font-size:12px; color:var(--mut); }
+.grp.wedge input{ accent-color:var(--money); }
+.grp.fed input{ accent-color:var(--policy); }
+.chip.zlb{ border-color:var(--policy); background:color-mix(in srgb, var(--policy) 12%, var(--panel)); color:var(--ink); }
+.new{ border:1px solid var(--money); border-left:4px solid var(--money); border-radius:8px; padding:9px 14px;
+  background:color-mix(in srgb, var(--money) 6%, var(--panel)); font-size:13.5px; }
+.new b.h{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--money); display:block; margin-bottom:4px; font-weight:600; }
+.new ol{ margin:0; padding-left:18px; display:grid; grid-template-columns:1fr 1fr; gap:2px 22px; }
+@media (max-width:760px){ .new ol{ grid-template-columns:1fr; } }
 </style>
 
 <div class="wrap">
   <header class="masthead">
     <div>
-      <div class="eyebrow">ECON 3204 · Macroeconomic Theory · Module 1 · The short run, Chapters 3–5</div>
-      <h1>The Short-Run <em>Lab</em></h1>
-      <p>Each slider changes <b>one letter in one equation</b>. The goods market, IS-LM, and the money market are three views of the same equilibrium, point A. For any change, ask two things: <b>which equation is the letter in</b>, and <b>is it on this diagram's axis?</b> On the axis, you move along a curve. Off the axis, the curve shifts.</p>
+      <div class="eyebrow" id="eyebrow">ECON 3204 · Macroeconomic Theory · Module 1 · The short run, Chapters 3–5</div>
+      <h1>The <em>IS-LM</em> Lab</h1>
+      <p id="intro"></p>
     </div>
     <div class="key" aria-label="Legend">
       <span><i style="border-color:var(--goods)"></i>ZZ, IS</span><span>goods market</span>
-      <span><i style="border-color:var(--money)"></i>Mᵈ</span><span>money demand</span>
+      <span><i style="border-color:var(--money)"></i><span id="kMoney">Mᵈ</span></span><span id="kMoneyT">money demand</span>
       <span><i style="border-color:var(--policy)"></i>LM, Mˢ</span><span>set by the Fed</span>
       <span><i class="dash" style="border-color:var(--mut)"></i>dashed</span><span>where you started</span>
       <span><i class="band"></i>band</span><span>the shift</span>
@@ -161,19 +185,39 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
 
   <section class="bench">
     <aside class="card rail" aria-label="Controls">
-      <div class="grp goods">
+      <div class="grp">
+        <h2>Model</h2>
+        <div class="seg fw" role="group" aria-label="Which model">
+          <button type="button" id="fwBasic" aria-pressed="true">Basic IS-LM</button>
+          <button type="button" id="fwExt" aria-pressed="false">Extended IS-LM</button>
+        </div>
+      </div>
+      <div class="grp fed" id="fedGrp">
+        <h2><span><span class="sw" style="background:var(--policy)"></span>The Fed</span></h2>
+        <div id="modeBox" hidden>
+          <div class="seg" role="group" aria-label="Which rate the Fed holds">
+            <button type="button" id="mReal" aria-pressed="true">holds real r̄</button>
+            <button type="button" id="mNom" aria-pressed="false">holds nominal ī</button>
+          </div>
+          <p class="segnote" id="segnote" style="margin-top:6px"></p>
+        </div>
+        <div class="sl" id="slIb"><label for="ib">Policy rate target <var>ī</var></label><span class="val"><span class="d" id="dib" hidden></span><output id="oib" for="ib"></output></span><input type="range" id="ib" min="0" max="0.10" step="0.0025"></div>
+        <div class="sl" id="slPol" hidden><label for="pol" id="polLabel">Real policy rate <var>r̄</var></label><span class="val"><span class="d" id="dpol" hidden></span><output id="opol" for="pol"></output></span><input type="range" id="pol" min="-0.04" max="0.10" step="0.0025"></div>
+      </div>
+      <div class="grp wedge" id="wedges" hidden>
+        <h2><span><span class="sw" style="background:var(--money)"></span>The wedges</span></h2>
+        <div class="sl"><label for="pie">Expected inflation <var>π</var><sup>e</sup></label><span class="val"><span class="d" id="dpie" hidden></span><output id="opie" for="pie"></output></span><input type="range" id="pie" min="0" max="0.08" step="0.0025"></div>
+        <div class="sl"><label for="x">Risk premium <var>x</var></label><span class="val"><span class="d" id="dx" hidden></span><output id="ox" for="x"></output></span><input type="range" id="x" min="0" max="0.08" step="0.0025"></div>
+      </div>
+      <div class="grp goods" id="goodsGrp">
         <h2><span><span class="sw" style="background:var(--goods)"></span>Goods market</span></h2>
         <div class="sl"><label for="G">Government spending <var>G</var></label><span class="val"><span class="d" id="dG" hidden></span><output id="oG" for="G"></output></span><input type="range" id="G" min="100" max="500" step="10"></div>
         <div class="sl"><label for="T">Taxes <var>T</var></label><span class="val"><span class="d" id="dT" hidden></span><output id="oT" for="T"></output></span><input type="range" id="T" min="0" max="300" step="10"></div>
         <div class="sl"><label for="c0">Consumer confidence <var>c</var><sub>0</sub></label><span class="val"><span class="d" id="dc0" hidden></span><output id="oc0" for="c0"></output></span><input type="range" id="c0" min="0" max="300" step="10"></div>
         <div class="sl"><label for="c1">Propensity to consume <var>c</var><sub>1</sub></label><span class="val"><span class="d" id="dc1" hidden></span><output id="oc1" for="c1"></output></span><input type="range" id="c1" min="0.50" max="0.70" step="0.01"></div>
-        <div class="sl"><label for="b0">Business confidence <var>b</var><sub>0</sub></label><span class="val"><span class="d" id="db0" hidden></span><output id="ob0" for="b0"></output></span><input type="range" id="b0" min="50" max="350" step="10"></div>
+        <div class="sl"><label for="b0">Business confidence <var>b</var><sub>0</sub></label><span class="val"><span class="d" id="db0" hidden></span><output id="ob0" for="b0"></output></span><input type="range" id="b0" min="0" max="350" step="10"></div>
         <div class="sl"><label for="b1">Investment and sales <var>b</var><sub>1</sub></label><span class="val"><span class="d" id="db1" hidden></span><output id="ob1" for="b1"></output></span><input type="range" id="b1" min="0" max="0.15" step="0.01"></div>
-        <div class="sl"><label for="b2">Investment and <var>i</var>, <var>b</var><sub>2</sub></label><span class="val"><span class="d" id="db2" hidden></span><output id="ob2" for="b2"></output></span><input type="range" id="b2" min="1000" max="3000" step="100"></div>
-      </div>
-      <div class="grp fed">
-        <h2><span><span class="sw" style="background:var(--policy)"></span>The Fed</span></h2>
-        <div class="sl"><label for="ib">Policy rate target <var>ī</var></label><span class="val"><span class="d" id="dib" hidden></span><output id="oib" for="ib"></output></span><input type="range" id="ib" min="0" max="0.10" step="0.0025"></div>
+        <div class="sl"><label for="b2" id="b2Label">Investment and <var>i</var>, <var>b</var><sub>2</sub></label><span class="val"><span class="d" id="db2" hidden></span><output id="ob2" for="b2"></output></span><input type="range" id="b2" min="1000" max="3000" step="100"></div>
       </div>
       <label class="toggle" for="zoom"><input type="checkbox" id="zoom"> Zoom in on the equilibrium</label>
       <div class="row">
@@ -184,13 +228,22 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
         <h2>Scenarios</h2>
         <div class="scen" id="presets"></div>
       </div>
-      <p class="hint">Each scenario starts from the baseline. "Start from here" makes the current position the new baseline, so you can stack changes.</p>
+      <p class="hint" id="scenHint"></p>
     </aside>
 
     <div class="card figcard">
+      <div class="new" id="newbox" hidden>
+        <b class="h">What the extended model adds</b>
+        <ol>
+          <li>Spending responds to the <b>borrowing rate</b> r̄ + x, not to the Fed's rate.</li>
+          <li>The Fed sets a nominal rate ī; the <b>real</b> rate is r̄ = ī − πᵉ.</li>
+          <li>A higher <b>risk premium</b> x shifts IS left at any policy rate.</li>
+          <li>The <b>zero lower bound</b> ī ≥ 0 means r̄ can't fall below −πᵉ.</li>
+        </ol>
+      </div>
       <div class="chips" id="chips" aria-live="polite"></div>
       <div id="warn" class="warn" hidden></div>
-      <div class="svgbox"><svg id="fig" viewBox="0 0 900 770" role="img" aria-label="Three linked diagrams: the ZZ diagram above the IS-LM diagram, sharing output on the horizontal axis, and the money market to the right of IS-LM, sharing the interest rate. Dashed curves and a hollow point A show the starting point; solid curves and a filled point A-prime show the current settings; shaded bands show each shift."></svg></div>
+      <div class="svgbox"><svg id="fig" viewBox="0 0 900 770" role="img" aria-label="Linked diagrams: the ZZ diagram above the IS-LM diagram, sharing output on the horizontal axis, and the money market to the right of IS-LM. In the extended model a rate ladder in the top right shows the nominal policy rate, the real policy rate and the borrowing rate. Dashed items show the starting point; solid items show the current settings; shaded bands show each shift."></svg></div>
       <div class="kpis" id="kpis"></div>
     </div>
   </section>
@@ -198,12 +251,12 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
   <section class="lower">
     <div class="card">
       <h3>The algebra</h3>
-      <p class="sub">Every equation behind the three diagrams, with the current numbers plugged in. Highlighted numbers changed; the old value is next to them.</p>
+      <p class="sub" id="algSub"></p>
       <div class="alg" id="alg"></div>
     </div>
     <div class="card">
       <h3>What changed, in every language</h3>
-      <p class="sub">One card per letter you moved: the story in words, where the letter sits in the algebra, and what it does in each window.</p>
+      <p class="sub" id="ledSub"></p>
       <div class="ledger" id="ledger"></div>
     </div>
   </section>
@@ -213,45 +266,55 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
 (function(){
   "use strict";
   // ---------------- model ----------------
-  // C = c0 + c1(Y−T);  I = b0 + b1·Y − b2·i;  Z = C + I + G;  Y = Z;  LM: i = ī
-  // P = 1, so real = nominal.  Real money demand Md = kY − h·i (linear version of Y·L(i));  Ms = M (Fed supplies it)
-  const K = 0.40, H = 3000;   // i enters as a decimal (0.04 = 4%)
-  const DEF = {G:250, T:100, c0:100, c1:0.60, b0:150, b1:0.10, b2:2000, ib:0.04};
-  const KEYS = ["G","T","c0","c1","b0","b1","b2","ib"];
-  const SYM = {G:"G", T:"T", c0:"c₀", c1:"c₁", b0:"b₀", b1:"b₁", b2:"b₂", ib:"ī"};
-  const DEC = {G:0,T:0,c0:0,c1:2,b0:0,b1:2,b2:0,ib:4};
-  let base = {...DEF}, cur = {...DEF};
+  // Basic:    I = b0 + b1·Y − b2·i,            LM: i = ī
+  // Extended: I = b0 + b1·Y − b2·(r̄ + x),      LM: r = r̄,   r̄ = ī − πᵉ,   zero lower bound ī ≥ 0
+  // Both:     C = c0 + c1(Y − T),  Z = C + I + G,  Y = Z.  Money (P = 1): Mᵈ/P = kY − h·i (i nominal), Mˢ = whatever holds the Fed's rate.
+  const K = 0.40, H = 3000;
+  const GOODS = ["G","T","c0","c1","b0","b1","b2"];
+  const SYM = {ib:"ī", pol:"r̄", pie:"πᵉ", x:"x", G:"G", T:"T", c0:"c₀", c1:"c₁", b0:"b₀", b1:"b₁", b2:"b₂"};
+  const DEC = {ib:4, pol:4, pie:4, x:4, G:0, T:0, c0:0, c1:2, b0:0, b1:2, b2:0};
+  let fw = "basic";                 // "basic" | "ext"
+  let mode = "real";                // extended only: the Fed holds "real" r̄ or "nom" ī
+  const DEF = () => ({G:250, T:100, c0:100, c1:0.60, b0:150, b1:0.10, b2:2000, ib:0.04, pol: mode==="real"?0.03:0.05, pie:0.02, x:0.01});
+  let base = DEF(), cur = DEF();
+  const KEYS = () => fw==="basic" ? ["ib",...GOODS] : ["pol","pie","x",...GOODS];
+  const moved = () => KEYS().some(k=>cur[k]!==base[k]);
+  const polSym = () => mode==="real" ? "r̄" : "ī";
+  const symOf = k => k==="pol" ? polSym() : SYM[k];
 
   function solve(p){
-    const aut = p.c0 - p.c1*p.T + p.b0 + p.G;   // autonomous spending (without the interest term)
-    const m = p.c1 + p.b1;
-    const zInt = aut - p.b2*p.ib;
-    const Y = zInt/(1-m);
-    const i = p.ib;
-    const C = p.c0 + p.c1*(Y-p.T), I = p.b0 + p.b1*Y - p.b2*i;
+    let iReq, pie=0, x=0;
+    if(fw==="basic"){ iReq=p.ib; } else { pie=p.pie; x=p.x; iReq = mode==="real" ? p.pol + p.pie : p.pol; }
+    const i = Math.max(0, iReq), zlb = iReq < 1e-9;
+    const r = i - pie, rb = r + x;
+    const aut = p.c0 - p.c1*p.T + p.b0 + p.G, m = p.c1 + p.b1;
+    const zInt = aut - p.b2*rb, Y = zInt/(1-m);
+    const C = p.c0 + p.c1*(Y-p.T), I = p.b0 + p.b1*Y - p.b2*rb;
     const M = K*Y - H*i;
-    return {aut, m, zInt, Y, i, C, I, M, isInt:aut/p.b2, isSlope:(1-m)/p.b2, mult:1/(1-m)};
+    return {i, iReq, zlb, r, rb, pie, x, aut, m, zInt, Y, C, I, M, isInt:(aut - p.b2*x)/p.b2, isSlope:(1-m)/p.b2, mult:1/(1-m), floor:-pie};
   }
-  const f = (x,d) => Number(x).toFixed(d);
+  const f = (v,d) => { const s=Number(v).toFixed(d); return s.startsWith("-") ? "−"+s.slice(1) : s; };
   const fx = (k,v) => f(v, DEC[k]);
   const dif = (a,b) => Math.abs(a-b) > 1e-9;
-  const signed = (x,d) => (x>0?"+":x<0?"−":"") + f(Math.abs(x),d);
+  const signed = (v,d) => (v>1e-12?"+":v<-1e-12?"−":"") + Number(Math.abs(v)).toFixed(d);
 
   // ---------------- drawing ----------------
   const svg = document.getElementById("fig"), NS = "http://www.w3.org/2000/svg";
+  const RMIN = -0.04, RMAX = 0.12;
   const P = {
     zz:{x0:92, y0:392, w:350, h:350, xmin:0, xmax:2400, ymin:0, ymax:2400},
-    is:{x0:92, y0:722, w:350, h:250, xmin:0, xmax:2400, ymin:0, ymax:0.10},
-    mm:{x0:532, y0:722, w:330, h:250, xmin:0, xmax:800, ymin:0, ymax:0.10}
+    is:{x0:92, y0:722, w:350, h:250, xmin:0, xmax:2400, ymin:RMIN, ymax:RMAX},
+    mm:{x0:532, y0:722, w:330, h:250, xmin:0, xmax:800, ymin:RMIN, ymax:RMAX},
+    rt:{x0:560, y0:382, w:302, h:290, xmin:0, xmax:3, ymin:RMIN, ymax:RMAX}
   };
   const px = (pn,x,y) => { const q=P[pn]; return [q.x0+(x-q.xmin)/(q.xmax-q.xmin)*q.w, q.y0-(y-q.ymin)/(q.ymax-q.ymin)*q.h]; };
-  function el(tag, attrs, parent, text){
+  function el(tag, attrs, parent, t){
     const e=document.createElementNS(NS,tag);
     for(const k in attrs) if(attrs[k]!==undefined && attrs[k]!=="") e.setAttribute(k, attrs[k]);
-    if(text!==undefined) e.textContent=text;
+    if(t!==undefined) e.textContent=t;
     (parent||svg).appendChild(e); return e;
   }
-  function clip(pn, a, s){          // visible piece of y = a + s·x inside the panel box
+  function clip(pn, a, s){
     const q=P[pn], pts=[], eps=1e-7;
     const add=(x,y)=>{ if(x>=q.xmin-eps && x<=q.xmax+eps && y>=q.ymin-eps && y<=q.ymax+eps) pts.push([x,y]); };
     add(q.xmin, a+s*q.xmin); add(q.xmax, a+s*q.xmax);
@@ -262,172 +325,369 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
   function seg(pn, sg, color, o={}){
     if(!sg) return;
     const a=px(pn,...sg[0]), b=px(pn,...sg[1]);
-    el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,"stroke-width":o.w||2.6,"stroke-dasharray":o.dash,
-      "stroke-linecap":"round",opacity:o.op,"clip-path":`url(#cl-${pn})`});
+    el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,"stroke-width":o.w||2.6,"stroke-dasharray":o.dash,"stroke-linecap":"round",opacity:o.op,"clip-path":`url(#cl-${pn})`});
   }
-  function band(pn, pts){           // translucent region between old and new curve (data coords), clipped to panel
+  function band(pn, pts){
     const d = pts.map((p,k)=>{ const [x,y]=px(pn,...p); return (k?"L":"M")+x.toFixed(1)+" "+y.toFixed(1); }).join(" ")+" Z";
     el("path",{d, fill:"var(--amber)", "fill-opacity":.22, stroke:"none", "clip-path":`url(#cl-${pn})`});
   }
-  const bandLines = (pn,a0,s0,a1,s1) => { const q=P[pn];
-    band(pn, [[q.xmin,a0+s0*q.xmin],[q.xmax,a0+s0*q.xmax],[q.xmax,a1+s1*q.xmax],[q.xmin,a1+s1*q.xmin]]); };
+  const bandLines = (pn,a0,s0,a1,s1) => { const q=P[pn]; band(pn, [[q.xmin,a0+s0*q.xmin],[q.xmax,a0+s0*q.xmax],[q.xmax,a1+s1*q.xmax],[q.xmin,a1+s1*q.xmin]]); };
   function text(x,y,t,o={}){
     return el("text",{x,y,"font-size":o.size||13,"font-weight":o.wt||600,fill:o.fill||"var(--ink)","text-anchor":o.anchor||"start",
       style:o.font?`font-family:${o.font}`:undefined, "font-style":o.italic?"italic":undefined}, svg, t);
   }
   function ticks(lo,hi,n){
     const raw=(hi-lo)/n, mag=Math.pow(10,Math.floor(Math.log10(raw))), st=[1,2,2.5,5,10].map(v=>v*mag).find(v=>v>=raw);
-    const out=[]; for(let v=Math.ceil(lo/st)*st; v<=hi+1e-9; v+=st) out.push(+v.toFixed(6)); return out;
+    const out=[]; for(let v=Math.ceil(lo/st-1e-9)*st; v<=hi+1e-9; v+=st) out.push(+v.toFixed(6)); return out;
   }
-  function frame(pn, xl, yl, title, nx, ny){
+  const tl = v => { const s=String(v); return s.startsWith("-") ? "−"+s.slice(1) : s; };
+  function frame(pn, xl, yl, title, nx, ny, noX){
     const q=P[pn], g=el("g",{});
     el("rect",{x:q.x0,y:q.y0-q.h,width:q.w,height:q.h,fill:"var(--panel2)"},g);
-    ticks(q.xmin,q.xmax,nx).forEach(v=>{ const [x]=px(pn,v,q.ymin);
-      el("line",{x1:x,y1:q.y0,x2:x,y2:q.y0-q.h,stroke:"var(--grid)","stroke-width":1},g);
-      el("text",{x,y:q.y0+16,"font-size":10.5,"text-anchor":"middle",fill:"var(--faint)",style:"font-family:var(--f-mono)"},g,String(v)); });
-    ticks(q.ymin,q.ymax,ny).forEach(v=>{ const [,y]=px(pn,q.xmin,v);
-      el("line",{x1:q.x0,y1:y,x2:q.x0+q.w,y2:y,stroke:"var(--grid)","stroke-width":1},g);
-      el("text",{x:q.x0-7,y:y+3.5,"font-size":10.5,"text-anchor":"end",fill:"var(--faint)",style:"font-family:var(--f-mono)"},g,String(v)); });
+    if(!noX) ticks(q.xmin,q.xmax,nx).forEach(v=>{ const [x]=px(pn,v,q.ymin);
+      el("line",{x1:x,y1:q.y0,x2:x,y2:q.y0-q.h,stroke:"var(--grid)"},g);
+      el("text",{x,y:q.y0+16,"font-size":10.5,"text-anchor":"middle",fill:"var(--faint)",style:"font-family:var(--f-mono)"},g,tl(v)); });
+    ticks(q.ymin,q.ymax,ny).forEach(v=>{ const [,y]=px(pn,q.xmin,v), zero=Math.abs(v)<1e-9;
+      el("line",{x1:q.x0,y1:y,x2:q.x0+q.w,y2:y,stroke:zero?"var(--mut)":"var(--grid)","stroke-width":zero?1.1:1},g);
+      el("text",{x:q.x0-7,y:y+3.5,"font-size":10.5,"text-anchor":"end",fill:"var(--faint)",style:"font-family:var(--f-mono)"},g,tl(v)); });
     el("line",{x1:q.x0,y1:q.y0,x2:q.x0+q.w,y2:q.y0,stroke:"var(--ink)","stroke-width":1.3},g);
     el("line",{x1:q.x0,y1:q.y0,x2:q.x0,y2:q.y0-q.h,stroke:"var(--ink)","stroke-width":1.3},g);
-    el("text",{x:q.x0+q.w/2,y:q.y0+36,"font-size":12.5,"text-anchor":"middle",fill:"var(--mut)"},g,xl);
+    if(xl) el("text",{x:q.x0+q.w/2,y:q.y0+36,"font-size":12.5,"text-anchor":"middle",fill:"var(--mut)"},g,xl);
     el("text",{x:q.x0-2,y:q.y0-q.h-10,"font-size":12.5,fill:"var(--mut)"},g,yl);
-    el("text",{x:q.x0+q.w,y:q.y0-q.h-10,"font-size":11,"text-anchor":"end",fill:"var(--ink)","letter-spacing":"1.4",
-      style:"font-family:var(--f-mono)"},g,title);
+    el("text",{x:q.x0+q.w,y:q.y0-q.h-10,"font-size":11,"text-anchor":"end",fill:"var(--ink)","letter-spacing":"1.4",style:"font-family:var(--f-mono)"},g,title);
+  }
+  function floorZone(pn, y, label, alignRight){
+    const q=P[pn]; if(y<=RMIN) return;
+    const a=px(pn,q.xmin,y), b=px(pn,q.xmax,y), lo=px(pn,q.xmin,RMIN);
+    el("rect",{x:a[0],y:a[1],width:b[0]-a[0],height:lo[1]-a[1],fill:"url(#hatch)",opacity:.85,"clip-path":`url(#cl-${pn})`});
+    el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:"var(--mut)","stroke-width":1.2,"stroke-dasharray":"2 3"});
+    if(label) text(alignRight?b[0]-6:a[0]+6, a[1]+14, label, {size:10.5, wt:500, fill:"var(--mut)", anchor:alignRight?"end":"start"});
   }
   function dot(pn,x,y,hollow){ const [a,b]=px(pn,x,y);
-    el("circle",{cx:a,cy:b,r:hollow?5:6.5,fill:hollow?"var(--panel)":"var(--ink)",stroke:hollow?"var(--mut)":"var(--panel)","stroke-width":hollow?2:2.2});
-    return [a,b]; }
-  function arrow(p1,p2,color,w){
-    const dx=p2[0]-p1[0], dy=p2[1]-p1[1], d=Math.hypot(dx,dy); if(d<14) return;
+    el("circle",{cx:a,cy:b,r:hollow?5:6.5,fill:hollow?"var(--panel)":"var(--ink)",stroke:hollow?"var(--mut)":"var(--panel)","stroke-width":hollow?2:2.2}); return [a,b]; }
+  function arrow(p1,p2,color,w,mk){
+    const dx=p2[0]-p1[0], dy=p2[1]-p1[1], d=Math.hypot(dx,dy); if(d<12) return false;
     const ux=dx/d, uy=dy/d;
-    el("line",{x1:p1[0]+ux*8,y1:p1[1]+uy*8,x2:p2[0]-ux*9,y2:p2[1]-uy*9,stroke:color,"stroke-width":w||1.8,"marker-end":"url(#ah-ink)"});
+    el("line",{x1:p1[0]+ux*8,y1:p1[1]+uy*8,x2:p2[0]-ux*9,y2:p2[1]-uy*9,stroke:color,"stroke-width":w||1.8,"marker-end":`url(#${mk||"ah-ink"})`}); return true;
   }
-
+  function badge(x,y,n){ el("circle",{cx:x,cy:y,r:8,fill:"var(--ink)"}); text(x,y+3.8,n,{size:10.5,wt:700,fill:"var(--panel)",anchor:"middle",font:"var(--f-mono)"}); }
+  // Money market in two rounds when the Fed's (nominal) rate moves and output moves too.
+  function moneyRounds(s0,s1,p0,p1){
+    if(!(dif(s0.i,s1.i) && dif(s0.Y,s1.Y))){ arrow(p0,p1,"var(--ink)"); return; }
+    const mid = K*s0.Y - H*s1.i;
+    if(mid<P.mm.xmin || mid>P.mm.xmax){ arrow(p0,p1,"var(--ink)"); return; }
+    const pm = px("mm",mid,s1.i);
+    el("line",{x1:pm[0],y1:P.mm.y0,x2:pm[0],y2:P.mm.y0-P.mm.h,stroke:"var(--policy)","stroke-width":1.2,"stroke-dasharray":"2 4",opacity:.6,"clip-path":"url(#cl-mm)"});
+    el("circle",{cx:pm[0],cy:pm[1],r:4.5,fill:"var(--panel)",stroke:"var(--ink)","stroke-width":1.6});
+    arrow(p0,pm,"var(--ink)"); arrow(pm,p1,"var(--ink)");
+    // badge 1 sits beside the first arrow, on the side away from A′; badge 2 below the second arrow, clear of the A′ label
+    const mx=(p0[0]+pm[0])/2, my=(p0[1]+pm[1])/2, dx=pm[0]-p0[0], dy=pm[1]-p0[1], L=Math.hypot(dx,dy)||1;
+    let nx=-dy/L, ny=dx/L; if(((mx+nx)-p1[0])**2+((my+ny)-p1[1])**2 < ((mx-nx)-p1[0])**2+((my-ny)-p1[1])**2){ nx=-nx; ny=-ny; }
+    badge(mx+nx*15, my+ny*15, "1");
+    badge((pm[0]+p1[0])/2, pm[1]+17, "2");
+  }
   function setWindows(s0,s1){
+    const lo = fw==="basic" ? 0 : RMIN, hi = fw==="basic" ? 0.10 : RMAX;
+    P.is.ymin=P.mm.ymin=lo; P.is.ymax=P.mm.ymax=hi;
     const zoom=document.getElementById("zoom").checked;
-    if(zoom){
-      const c=(s0.Y+s1.Y)/2, half=Math.max(450, Math.abs(s1.Y-s0.Y)/2+250);
-      const lo=Math.max(0, c-half), hi=lo+2*half;
-      P.zz.xmin=P.is.xmin=lo; P.zz.xmax=P.is.xmax=hi; P.zz.ymin=lo; P.zz.ymax=hi;
-    } else { P.zz.xmin=P.is.xmin=0; P.zz.xmax=P.is.xmax=2400; P.zz.ymin=0; P.zz.ymax=2400; }
+    if(zoom){ const c=(s0.Y+s1.Y)/2, half=Math.max(450, Math.abs(s1.Y-s0.Y)/2+250), lo=Math.max(0,c-half), hi=lo+2*half;
+      P.zz.xmin=P.is.xmin=lo; P.zz.xmax=P.is.xmax=hi; P.zz.ymin=lo; P.zz.ymax=hi; }
+    else { P.zz.xmin=P.is.xmin=0; P.zz.xmax=P.is.xmax=2400; P.zz.ymin=0; P.zz.ymax=2400; }
     return zoom;
+  }
+  function wrapText(x,y,t,width){ const words=t.split(" "); let line="", yy=y;
+    words.forEach(wd=>{ if((line+" "+wd).trim().length>width){ text(x,yy,line.trim(),{size:13,wt:400,fill:"var(--mut)"}); yy+=17; line=wd; } else line+=" "+wd; });
+    if(line.trim()){ text(x,yy,line.trim(),{size:13,wt:400,fill:"var(--mut)"}); yy+=17; } return yy; }
+
+  function ladder(s0,s1,mv){
+    const cols=[0.5,1.5,2.5], hw=0.28;
+    frame("rt","","Rate","THE RATE LADDER",3,8,true);
+    const z0=px("rt",cols[0]-hw-0.08,0), z1=px("rt",cols[0]+hw+0.08,RMIN);
+    el("rect",{x:z0[0],y:z0[1],width:z1[0]-z0[0],height:z1[1]-z0[1],fill:"url(#hatch)",opacity:.9});
+    text((z0[0]+z1[0])/2, z0[1]+16, "ī < 0 ruled out", {size:10.5, wt:500, fill:"var(--mut)", anchor:"middle"});
+    const bar=(c,v,color,ghost)=>{ const a=px("rt",cols[c]-hw,v), b=px("rt",cols[c]+hw,v);
+      el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,"stroke-width":ghost?2:4,"stroke-dasharray":ghost?"5 4":"",opacity:ghost?.55:1,"stroke-linecap":"round","clip-path":"url(#cl-rt)"}); };
+    const v0=[s0.i,s0.r,s0.rb], v1=[s1.i,s1.r,s1.rb], colr=["var(--policy)","var(--policy)","var(--goods)"];
+    if(mv) [0,1,2].forEach(c=>{ if(dif(v0[c],v1[c])){ const a=px("rt",cols[c]-hw,v0[c]), b=px("rt",cols[c]+hw,v1[c]);
+      el("rect",{x:a[0],y:Math.min(a[1],b[1]),width:b[0]-a[0],height:Math.abs(b[1]-a[1]),fill:"var(--amber)","fill-opacity":.22,"clip-path":"url(#cl-rt)"}); bar(c,v0[c],colr[c],true); } });
+    const step=(c1,va,c2,vb,sym,val)=>{
+      const gx=(cols[c1]+cols[c2])/2, a=px("rt",cols[c1]+hw,va), g1=px("rt",gx,va), g2=px("rt",gx,vb), b=px("rt",cols[c2]-hw,vb);
+      const ds={stroke:"var(--money)","stroke-width":1.2,"stroke-dasharray":"3 3","clip-path":"url(#cl-rt)"};
+      el("line",{x1:a[0],y1:a[1],x2:g1[0],y2:g1[1],...ds}); el("line",{x1:g2[0],y1:g2[1],x2:b[0],y2:b[1],...ds});
+      if(Math.abs(g2[1]-g1[1])>8) el("line",{x1:g1[0],y1:g1[1],x2:g2[0],y2:g2[1]+(g2[1]>g1[1]?-5:5),stroke:"var(--money)","stroke-width":2,"marker-end":"url(#ah-money)","clip-path":"url(#cl-rt)"});
+      const top=Math.min(g1[1],g2[1]);
+      text(g1[0], top-20, sym, {size:12, wt:700, fill:"var(--money)", anchor:"middle"});
+      text(g1[0], top-7, val, {size:10.5, wt:600, fill:"var(--money)", anchor:"middle", font:"var(--f-mono)"});
+    };
+    step(0,s1.i,1,s1.r,"−πᵉ",f(s1.i-s1.r,3)); step(1,s1.r,2,s1.rb,"+x",f(s1.rb-s1.r,3));
+    [0,1,2].forEach(c=>{ bar(c,v1[c],colr[c]); const [x,y]=px("rt",cols[c],Math.min(Math.max(v1[c],RMIN),RMAX));
+      text(x,y-8,f(v1[c],4),{size:11,wt:600,fill:colr[c],anchor:"middle",font:"var(--f-mono)"}); });
+    [["Nominal","policy ī"],["Real","policy r̄"],["Borrowing","r̄ + x"]].forEach((l,c)=>{ const [x]=px("rt",cols[c],RMIN);
+      text(x,P.rt.y0+15,l[0],{size:11.5,wt:600,anchor:"middle"}); text(x,P.rt.y0+29,l[1],{size:11,wt:400,fill:"var(--mut)",anchor:"middle"}); });
   }
 
   function draw(){
     while(svg.firstChild) svg.removeChild(svg.firstChild);
-    const s0=solve(base), s1=solve(cur), moved=KEYS.some(k=>cur[k]!==base[k]);
+    const s0=solve(base), s1=solve(cur), mv=moved(), ext=fw==="ext";
     const zoom=setWindows(s0,s1);
     const defs=el("defs",{});
     for(const pn in P){ const q=P[pn]; const cp=el("clipPath",{id:"cl-"+pn},defs); el("rect",{x:q.x0,y:q.y0-q.h,width:q.w,height:q.h},cp); }
-    const mk=el("marker",{id:"ah-ink",viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6.5,markerHeight:6.5,orient:"auto-start-reverse"},defs);
-    el("path",{d:"M0,0 L10,5 L0,10 z",fill:"var(--ink)"},mk);
+    [["ah-ink","var(--ink)"],["ah-money","var(--money)"]].forEach(([id,c])=>{
+      const mk=el("marker",{id,viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6.5,markerHeight:6.5,orient:"auto-start-reverse"},defs);
+      el("path",{d:"M0,0 L10,5 L0,10 z",fill:c},mk); });
+    const pat=el("pattern",{id:"hatch",width:6,height:6,patternUnits:"userSpaceOnUse",patternTransform:"rotate(45)"},defs);
+    el("line",{x1:0,y1:0,x2:0,y2:6,stroke:"var(--rule)","stroke-width":3},pat);
 
-    frame("zz","Output (income), Y","Demand Z, Production Y","I · GOODS MARKET", 6, 6);
-    frame("is","Output, Y","Interest rate, i","III · IS-LM", 6, 5);
-    frame("mm","Real money, M/P","Interest rate, i","II · MONEY MARKET", 4, 5);
-    if(zoom){ text(P.zz.x0+6, P.zz.y0-P.zz.h+16, "zoomed: axes do not start at zero", {size:11, wt:400, fill:"var(--mut)", italic:true}); }
+    frame("zz","Output (income), Y","Demand Z, Production Y","I · GOODS MARKET",6,6);
+    frame("is","Output, Y", ext?"Real policy rate, r":"Interest rate, i","III · IS-LM",6,ext?8:5);
+    frame("mm","Real money, M/P", ext?"Nominal rate, i":"Interest rate, i","II · MONEY MARKET",4,ext?8:5);
+    if(zoom) text(P.zz.x0+6, P.zz.y0-P.zz.h+16, "zoomed: axes do not start at zero", {size:11, wt:400, fill:"var(--mut)", italic:true});
 
-    // 45° line
     seg("zz", clip("zz",0,1), "var(--faint)", {w:1.4, dash:"5 5"});
     { const q=P.zz, t=q.xmin+0.93*(q.xmax-q.xmin), [x,y]=px("zz",t,t); text(x-8,y+2,"45°",{size:11.5,wt:500,fill:"var(--mut)",anchor:"end"}); }
+    if(ext){ floorZone("is", s1.floor, "zero lower bound: r̄ ≥ −πᵉ"); floorZone("mm", 0, "i < 0 ruled out", true); }
 
-    // --- shift bands (old -> new) ---
-    const bandZZ = dif(s0.zInt,s1.zInt)||dif(s0.m,s1.m);
-    if(bandZZ) bandLines("zz", s0.zInt, s0.m, s1.zInt, s1.m);
-    if(dif(s0.isInt,s1.isInt)||dif(s0.isSlope,s1.isSlope)) bandLines("is", s0.isInt, -s0.isSlope, s1.isInt, -s1.isSlope);
-    if(dif(s0.i,s1.i)){ const q=P.is; band("is",[[q.xmin,s0.i],[q.xmax,s0.i],[q.xmax,s1.i],[q.xmin,s1.i]]); }
-    // Md: i = (K·Y − M)/H  ->  in (M,i): i = K·Y/H − M/H  (parallel shifts when Y changes)
-    if(dif(s0.Y,s1.Y)) bandLines("mm", K*s0.Y/H, -1/H, K*s1.Y/H, -1/H);
+    const zzM=dif(s0.zInt,s1.zInt)||dif(s0.m,s1.m), isM=dif(s0.isInt,s1.isInt)||dif(s0.isSlope,s1.isSlope);
+    const mdA=Y=>K*Y/H, mdS=-1/H;   // Mᵈ in (M, i): i = kY/h − M/h
+    if(zzM) bandLines("zz", s0.zInt, s0.m, s1.zInt, s1.m);
+    if(isM) bandLines("is", s0.isInt, -s0.isSlope, s1.isInt, -s1.isSlope);
+    if(dif(s0.r,s1.r)){ const q=P.is; band("is",[[q.xmin,s0.r],[q.xmax,s0.r],[q.xmax,s1.r],[q.xmin,s1.r]]); }
+    if(dif(s0.Y,s1.Y)) bandLines("mm", mdA(s0.Y), mdS, mdA(s1.Y), mdS);
     if(dif(s0.M,s1.M)){ const q=P.mm; band("mm",[[s0.M,q.ymin],[s0.M,q.ymax],[s1.M,q.ymax],[s1.M,q.ymin]]); }
-
-    // --- ghosts ---
-    if(moved){
+    if(mv){
       const g={dash:"6 5", op:.55, w:2};
-      if(bandZZ) seg("zz", clip("zz",s0.zInt,s0.m), "var(--goods)", g);
-      if(dif(s0.isInt,s1.isInt)||dif(s0.isSlope,s1.isSlope)) seg("is", clip("is",s0.isInt,-s0.isSlope), "var(--goods)", g);
-      if(dif(s0.i,s1.i)) seg("is", clip("is",s0.i,0), "var(--policy)", g);
-      if(dif(s0.Y,s1.Y)) seg("mm", clip("mm",K*s0.Y/H,-1/H), "var(--money)", g);
+      if(zzM) seg("zz", clip("zz",s0.zInt,s0.m), "var(--goods)", g);
+      if(isM) seg("is", clip("is",s0.isInt,-s0.isSlope), "var(--goods)", g);
+      if(dif(s0.r,s1.r)) seg("is", clip("is",s0.r,0), "var(--policy)", g);
+      if(dif(s0.Y,s1.Y)) seg("mm", clip("mm",mdA(s0.Y),mdS), "var(--money)", g);
       if(dif(s0.M,s1.M)) seg("mm", [[s0.M,P.mm.ymin],[s0.M,P.mm.ymax]], "var(--policy)", g);
     }
-    // --- current curves ---
-    const zzS=clip("zz",s1.zInt,s1.m), isS=clip("is",s1.isInt,-s1.isSlope), lmS=clip("is",s1.i,0), mdS=clip("mm",K*s1.Y/H,-1/H);
-    seg("zz",zzS,"var(--goods)",{w:2.8}); seg("is",isS,"var(--goods)",{w:2.8}); seg("is",lmS,"var(--policy)",{w:2.8}); seg("mm",mdS,"var(--money)",{w:2.8});
-    const inM = s1.M>=P.mm.xmin && s1.M<=P.mm.xmax;
+    const zzS=clip("zz",s1.zInt,s1.m), isS=clip("is",s1.isInt,-s1.isSlope), lmS=clip("is",s1.r,0), mdSg=clip("mm",mdA(s1.Y),mdS);
+    seg("zz",zzS,"var(--goods)",{w:2.8}); seg("is",isS,"var(--goods)",{w:2.8}); seg("is",lmS,"var(--policy)",{w:2.8}); seg("mm",mdSg,"var(--money)",{w:2.8});
+    const inM = s1.M>=0 && s1.M<=P.mm.xmax;
     if(inM) seg("mm",[[s1.M,P.mm.ymin],[s1.M,P.mm.ymax]],"var(--policy)",{w:2.8});
     if(zzS){ const [x,y]=px("zz",...zzS[1]); text(x+6,y+4,"ZZ",{fill:"var(--goods)",size:14,wt:700}); }
     if(isS){ const [x,y]=px("is",...isS[0]); text(x+8,y+14,"IS",{fill:"var(--goods)",size:14,wt:700}); }
     if(lmS){ const [x,y]=px("is",...lmS[1]); text(x-4,y-8,"LM",{fill:"var(--policy)",size:14,wt:700,anchor:"end"}); }
-    if(mdS){ const [x,y]=px("mm",...mdS[0]); text(x+8,y+15,"Mᵈ",{fill:"var(--money)",size:14,wt:700}); }
+    if(mdSg){ const [x,y]=px("mm",...mdSg[0]); text(x+8,y+15,"Mᵈ",{fill:"var(--money)",size:14,wt:700}); }
     if(inM){ const [x,y]=px("mm",s1.M,P.mm.ymax); text(x+6,y+15,"Mˢ",{fill:"var(--policy)",size:14,wt:700}); }
 
-    // --- ZZ shift gauge: a labelled arrow from old ZZ to new ZZ, so small shifts are readable ---
-    if(bandZZ){
+    if(zzM){
       const q=P.zz, span=q.xmax-q.xmin, fr=v=>(v-q.xmin)/span;
-      const fpick=[0.25,0.35,0.5,0.65,0.8].map(v=>{ const a=fr(s0.Y), b=fr(s1.Y), between=v>Math.min(a,b)&&v<Math.max(a,b); return [v,Math.min(Math.abs(v-a),Math.abs(v-b))-(between?0.2:0)]; }).sort((u,v)=>v[1]-u[1])[0][0];
-      const xg=q.xmin+fpick*span;
-      const yOld=s0.zInt+s0.m*xg, yNew=s1.zInt+s1.m*xg;
-      const a=px("zz",xg,yOld), b=px("zz",xg,yNew);
-      if(Math.abs(b[1]-a[1])>6){
-        el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1]+(b[1]>a[1]?-6:6),stroke:"var(--ink)","stroke-width":1.6,"marker-end":"url(#ah-ink)"});
-      }
-      const lab = dif(s0.m,s1.m) ? "ZZ rotates" : `ZZ ${yNew>yOld?"+":"−"}${f(Math.abs(s1.zInt-s0.zInt),0)}`;
-      text(a[0]-9, Math.min(a[1],b[1])-11, lab, {size:12, wt:600, font:"var(--f-mono)", anchor:"end"});
+      const fp=[0.25,0.35,0.5,0.65,0.8].map(v=>{ const a=fr(s0.Y), b=fr(s1.Y), btw=v>Math.min(a,b)&&v<Math.max(a,b); return [v,Math.min(Math.abs(v-a),Math.abs(v-b))-(btw?0.2:0)]; }).sort((u,v)=>v[1]-u[1])[0][0];
+      const xg=q.xmin+fp*span, yO=s0.zInt+s0.m*xg, yN=s1.zInt+s1.m*xg, a=px("zz",xg,yO), b=px("zz",xg,yN);
+      if(Math.abs(b[1]-a[1])>6) el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1]+(b[1]>a[1]?-6:6),stroke:"var(--ink)","stroke-width":1.6,"marker-end":"url(#ah-ink)"});
+      text(a[0]-9, Math.min(a[1],b[1])-11, dif(s0.m,s1.m)?"ZZ rotates":`ZZ ${yN>yO?"+":"−"}${f(Math.abs(s1.zInt-s0.zInt),0)}`, {size:12, wt:600, font:"var(--f-mono)", anchor:"end"});
     }
 
-    const onChart = s1.Y>=P.is.xmin && s1.Y<=P.is.xmax && s1.i>=0 && s1.i<=P.is.ymax;
+    const onChart = s1.Y>=P.is.xmin && s1.Y<=P.is.xmax && s1.r>=P.is.ymin && s1.r<=P.is.ymax && s1.i<=P.mm.ymax && s1.rb<=RMAX;
     const pts={};
-    if(moved){ pts.z0=dot("zz",s0.Y,s0.Y,true); pts.i0=dot("is",s0.Y,s0.i,true); if(s0.M>=0&&s0.M<=P.mm.xmax) pts.m0=dot("mm",s0.M,s0.i,true); }
+    if(mv){ pts.z0=dot("zz",s0.Y,s0.Y,true); pts.i0=dot("is",s0.Y,s0.r,true); if(s0.M>=0&&s0.M<=P.mm.xmax) pts.m0=dot("mm",s0.M,s0.i,true); }
     if(onChart){
-      const a=px("zz",s1.Y,s1.Y), b=px("is",s1.Y,s1.i), c=px("mm",Math.min(Math.max(s1.M,0),P.mm.xmax),s1.i);
-      el("line",{x1:a[0],y1:a[1]+8,x2:b[0],y2:b[1]-8,stroke:"var(--ink)","stroke-width":1,"stroke-dasharray":"2 4",opacity:.7});
-      el("line",{x1:b[0]+8,y1:b[1],x2:inM?c[0]-8:P.mm.x0,y2:b[1],stroke:"var(--ink)","stroke-width":1,"stroke-dasharray":"2 4",opacity:.7});
-      // readouts on the axes
+      const a=px("zz",s1.Y,s1.Y), b=px("is",s1.Y,s1.r), c=px("mm",Math.min(Math.max(s1.M,0),P.mm.xmax),s1.i);
+      const dl={stroke:"var(--ink)","stroke-width":1,"stroke-dasharray":"2 4",opacity:.7};
+      el("line",{x1:a[0],y1:a[1]+8,x2:b[0],y2:b[1]-8,...dl});
+      if(ext && dif(s1.i,s1.r)){   // read across, stepping up by πᵉ between the two panels
+        const gx=(P.is.x0+P.is.w+P.mm.x0)/2;
+        el("line",{x1:b[0]+8,y1:b[1],x2:gx,y2:b[1],...dl});
+        el("line",{x1:gx,y1:b[1],x2:gx,y2:c[1],stroke:"var(--money)","stroke-width":1.6});
+        el("line",{x1:gx,y1:c[1],x2:inM?c[0]-8:P.mm.x0,y2:c[1],...dl});
+        text(gx-5,(b[1]+c[1])/2+4,"+πᵉ",{size:11,wt:700,fill:"var(--money)",anchor:"end"});
+      } else el("line",{x1:b[0]+8,y1:b[1],x2:inM?c[0]-8:P.mm.x0,y2:b[1],...dl});
       const yb=px("is",s1.Y,P.is.ymin);
       el("rect",{x:yb[0]-24,y:yb[1]+3,width:48,height:16,rx:3,fill:"var(--ink)"});
       text(yb[0],yb[1]+15,f(s1.Y,0),{size:10.5,wt:500,fill:"var(--panel)",anchor:"middle",font:"var(--f-mono)"});
-      const ib=px("is",P.is.xmin,s1.i);
+      const ib=px("is",P.is.xmin,s1.r);
       el("rect",{x:ib[0]-50,y:ib[1]-8,width:46,height:16,rx:3,fill:"var(--ink)"});
-      text(ib[0]-27,ib[1]+4,f(s1.i,4),{size:10.5,wt:500,fill:"var(--panel)",anchor:"middle",font:"var(--f-mono)"});
-      pts.z1=dot("zz",s1.Y,s1.Y); pts.i1=dot("is",s1.Y,s1.i); if(inM) pts.m1=dot("mm",s1.M,s1.i);
-      const nm=moved?"A′":"A";
-      text(pts.z1[0]+10,pts.z1[1]+18,nm,{size:14,wt:700});
-      text(pts.i1[0]+10,pts.i1[1]-10,nm,{size:14,wt:700});
+      text(ib[0]-27,ib[1]+4,f(s1.r,4),{size:10.5,wt:500,fill:"var(--panel)",anchor:"middle",font:"var(--f-mono)"});
+      pts.z1=dot("zz",s1.Y,s1.Y); pts.i1=dot("is",s1.Y,s1.r); if(inM) pts.m1=dot("mm",s1.M,s1.i);
+      const nm=mv?"A′":"A";
+      text(pts.z1[0]+10,pts.z1[1]+18,nm,{size:14,wt:700}); text(pts.i1[0]+10,pts.i1[1]-10,nm,{size:14,wt:700});
       if(pts.m1) text(pts.m1[0]+10,pts.m1[1]-10,nm,{size:14,wt:700});
     }
-    if(moved){
+    if(mv){
       text(pts.z0[0]-10,pts.z0[1]-9,"A",{size:13,wt:600,fill:"var(--mut)",anchor:"end"});
       text(pts.i0[0]-10,pts.i0[1]-10,"A",{size:13,wt:600,fill:"var(--mut)",anchor:"end"});
       if(pts.m0) text(pts.m0[0]-10,pts.m0[1]-10,"A",{size:13,wt:600,fill:"var(--mut)",anchor:"end"});
-      if(onChart){ arrow(pts.z0,pts.z1,"var(--ink)"); arrow(pts.i0,pts.i1,"var(--ink)"); if(pts.m0&&pts.m1) arrow(pts.m0,pts.m1,"var(--ink)"); }
+      if(onChart){ arrow(pts.z0,pts.z1,"var(--ink)"); arrow(pts.i0,pts.i1,"var(--ink)"); if(pts.m0&&pts.m1) moneyRounds(s0,s1,pts.m0,pts.m1); }
     }
 
-    // --- reading guide in the empty quadrant ---
-    const gx=P.mm.x0, gy=78;
-    text(gx, gy, "How to read it", {size:20, wt:400, font:"var(--f-display)"});
-    const items=[
-      ["Read down","ZZ and IS-LM share the output axis, so A′ sits at the same Y in both."],
-      ["Read across","IS-LM and the money market share the interest-rate axis, so A′ sits at the same i."],
-      ["Shaded band","The area between a dashed curve and its solid twin is the shift."],
-      ["No band","That curve did not move. If A′ moved anyway, the economy slid along it."]
-    ];
-    let yy=gy+30;
-    items.forEach(([h,t])=>{
-      text(gx,yy,h,{size:13,wt:700}); yy+=18;
-      const words=t.split(" "); let line="";
-      words.forEach(wd=>{ if((line+" "+wd).trim().length>48){ text(gx,yy,line.trim(),{size:13,wt:400,fill:"var(--mut)"}); yy+=17; line=wd; } else line+=" "+wd; });
-      if(line.trim()){ text(gx,yy,line.trim(),{size:13,wt:400,fill:"var(--mut)"}); yy+=17; }
-      yy+=10;
-    });
+    if(ext) ladder(s0,s1,mv);
+    else {
+      const gx=P.mm.x0, gy=78; let yy=gy+30;
+      text(gx, gy, "How to read it", {size:20, wt:400, font:"var(--f-display)"});
+      [["Read down","ZZ and IS-LM share the output axis, so A′ sits at the same Y in both."],
+       ["Read across","IS-LM and the money market share the interest-rate axis, so A′ sits at the same i."],
+       ["Shaded band","The area between a dashed curve and its solid twin is the shift."],
+       ["No band","That curve did not move. If A′ moved anyway, the economy slid along it."]
+      ].forEach(([h,t])=>{ text(gx,yy,h,{size:13,wt:700}); yy=wrapText(gx,yy+18,t,48)+10; });
+    }
 
     const w=document.getElementById("warn");
-    if(!onChart || !inM){ w.hidden=false; w.textContent="The new equilibrium is off the edge of these axes. Pull one of the sliders back a little, or reset."; }
-    else w.hidden=true;
+    if(!onChart){ w.hidden=false; w.textContent="The new equilibrium is off the edge of these axes. Pull one of the sliders back a little, or reset."; } else w.hidden=true;
   }
 
   // ---------------- chips + KPIs ----------------
   function chips(){
-    const s0=solve(base), s1=solve(cur), moved=KEYS.some(k=>cur[k]!==base[k]), c=[];
+    const s0=solve(base), s1=solve(cur), c=[];
+    if(!moved()) c.push(["","<b>Baseline.</b> Move a slider or pick a scenario."]);
+    else{
+      if(dif(s0.m,s1.m)) c.push(["rot",`<b>ZZ</b> rotates, ${s1.m>s0.m?"steeper":"flatter"}`]);
+      else c.push(dif(s0.zInt,s1.zInt)?["shift",`<b>ZZ</b> shifts ${s1.zInt>s0.zInt?"up":"down"}`]:["","<b>ZZ</b> unchanged"]);
+      if(dif(s0.isSlope,s1.isSlope)) c.push(["rot",`<b>IS</b> rotates, ${s1.isSlope<s0.isSlope?"flatter":"steeper"}`]);
+      else if(dif(s0.isInt,s1.isInt)) c.push(["shift",`<b>IS</b> shifts ${s1.isInt>s0.isInt?"right (up)":"left (down)"}`]);
+      else c.push(dif(s0.Y,s1.Y)?["along","<b>IS</b> stays put · move along it"]:["","<b>IS</b> unchanged"]);
+      if(dif(s0.r,s1.r)) c.push(["shift",`<b>LM</b> shifts ${s1.r>s0.r?"up":"down"}`]);
+      else c.push(dif(s0.Y,s1.Y)?["along","<b>LM</b> stays put · move along it"]:["","<b>LM</b> unchanged"]);
+      c.push(dif(s0.Y,s1.Y)?["shift",`<b>Mᵈ</b> shifts ${s1.Y>s0.Y?"right":"left"}`]:["","<b>Mᵈ</b> unchanged"]);
+      if(dif(s0.M,s1.M) && dif(s0.i,s1.i) && dif(s0.Y,s1.Y)){ const mid=K*s0.Y-H*s1.i;
+        c.push(["shift",`<b>Mˢ</b> ${s1.M>s0.M?"rises":"falls"} in two rounds: ① ${signed(mid-s0.M,0)} ② ${signed(s1.M-mid,0)}`]); }
+      else c.push(dif(s0.M,s1.M)?["shift",`<b>Mˢ</b> shifts ${s1.M>s0.M?"right":"left"}`]:["","<b>Mˢ</b> unchanged"]);
+      if(fw==="ext") c.push(dif(s0.rb,s1.rb)?["shift",`<b>Borrowing rate</b> ${s1.rb>s0.rb?"up":"down"}`]:["","<b>Borrowing rate</b> unchanged"]);
+    }
+    if(s1.zlb) c.push(["zlb","<b>Zero lower bound:</b> ī is at 0 and can't go lower"]);
+    document.getElementById("chips").innerHTML=c.map(x=>`<span class="chip ${x[0]}">${x[1]}</span>`).join("");
+  }
+  function kpis(){
+    const s0=solve(base), s1=solve(cur);
+    const rows = fw==="basic"
+      ? [["Output","Y*","Y",0],["Interest rate","i*","i",4],["Real money","M/P","M",0],["Consumption","C*","C",0],["Investment","I*","I",0],["Multiplier","","mult",2]]
+      : [["Output","Y*","Y",0],["Nominal policy","ī","i",4],["Real policy","r̄","r",4],["Borrowing","r̄ + x","rb",4],["Real money","M/P","M",0],["Consumption","C*","C",0],["Investment","I*","I",0],["Multiplier","","mult",2]];
+    const box=document.getElementById("kpis");
+    box.style.gridTemplateColumns=`repeat(${rows.length}, minmax(0,1fr))`;
+    box.innerHTML=rows.map(([name,sym,key,d])=>{ const a=s0[key], b=s1[key], ch=dif(a,b);
+      return `<div class="kpi"><div class="k">${name} <var>${sym}</var></div><div class="v">${f(b,d)}</div>
+        <div class="f">${ch?`from ${f(a,d)} <b>${signed(b-a,d)}</b>`:"unchanged"}</div></div>`; }).join("");
+  }
+
+  // ---------------- algebra ----------------
+  const V = x => `<var>${x}</var>`, sb=(l,n)=>`${V(l)}<sub>${n}</sub>`, PE=`${V("π")}<sup>e</sup>`;
+  function nv(k){ const v=fx(k,cur[k]); return cur[k]!==base[k] ? `<span class="c n">${v}</span><span class="w">was ${fx(k,base[k])}</span>` : `<span class="n">${v}</span>`; }
+  function rv(a,b,d){ const v=f(b,d); return dif(a,b) ? `<span class="c n">${v}</span><span class="w">was ${f(a,d)}</span>` : `<span class="n">${v}</span>`; }
+  const sw=c=>`<span class="sw" style="background:${c}"></span>`;
+  const blk=(c,lb,body)=>`<div class="blk"><div class="lb">${sw(c)}${lb}</div><div class="eqs">${body}</div></div>`;
+  function algebra(){
+    const s0=solve(base), s1=solve(cur), ext=fw==="ext";
+    const R = ext ? `(${V("r̄")} + ${V("x")})` : V("ī");
+    const rateNum = ext ? rv(s0.rb,s1.rb,4) : nv("ib");
+    let h="";
+    if(ext){
+      const fed = mode==="real"
+        ? `<div class="eq">The Fed sets the real rate: ${V("r̄")} = ${nv("pol")}. Its nominal rate follows: ${V("ī")} = ${V("r̄")} + ${PE} = ${nv("pol")} + ${nv("pie")} = ${rv(s0.iReq,s1.iReq,4)}</div>`
+        : `<div class="eq">The Fed sets the nominal rate: ${V("ī")} = ${nv("pol")}. The real rate follows: ${V("r̄")} = ${V("ī")} − ${PE} = ${nv("pol")} − ${nv("pie")} = ${rv(s0.r,s1.r,4)}</div>`;
+      const zl = s1.zlb ? `<div class="prose"><b>The Fed is at the zero lower bound.</b> ${V("ī")} = 0, so ${V("r̄")} = −${PE} = ${f(s1.r,4)}.</div>` : `<div class="prose">The zero lower bound ${V("ī")} ≥ 0 means ${V("r̄")} can't fall below −${PE} = ${rv(s0.floor,s1.floor,4)}.</div>`;
+      h+=blk("var(--policy)","Policy rate",fed+zl);
+      h+=blk("var(--money)","Borrowing rate",`<div class="eq">${V("r̄")} + ${V("x")} = ${rv(s0.r,s1.r,4)} + ${nv("x")} = ${rv(s0.rb,s1.rb,4)}</div><div class="prose">Lenders add the risk premium ${V("x")}. This is the rate firms and households pay.</div>`);
+    }
+    h+=blk("var(--goods)","Consumption",`<div class="eq">${V("C")} = ${sb("c",0)} + ${sb("c",1)}(${V("Y")} − ${V("T")}) = ${nv("c0")} + ${nv("c1")}(${V("Y")} − ${nv("T")})</div>`);
+    h+=blk("var(--goods)","Investment",`<div class="eq">${V("I")} = ${sb("b",0)} + ${sb("b",1)}${V("Y")} − ${sb("b",2)}${ext?`(${V("r")} + ${V("x")})`:V("i")} = ${nv("b0")} + ${nv("b1")}${V("Y")} − ${nv("b2")}${ext?`(${V("r")} + ${V("x")})`:V("i")}</div>`+(ext?`<div class="prose">Investment now depends on the borrowing rate.</div>`:""));
+    h+=blk("var(--goods)","Government",`<div class="eq">${V("G")} = ${nv("G")}</div>`);
+    h+=blk("var(--goods)","Demand, ZZ",`<div class="eq">${V("Z")} = [${sb("c",0)} − ${sb("c",1)}${V("T")} + ${sb("b",0)} + ${V("G")} − ${sb("b",2)}${R}] + (${sb("c",1)} + ${sb("b",1)})${V("Y")}</div>
+      <div class="eq">&emsp;= [${nv("c0")} − ${nv("c1")}×${nv("T")} + ${nv("b0")} + ${nv("G")} − ${nv("b2")}×${rateNum}] + (${nv("c1")} + ${nv("b1")})${V("Y")}</div>
+      <div class="eq strong">&emsp;= ${rv(s0.zInt,s1.zInt,0)} + ${rv(s0.m,s1.m,2)}${V("Y")} <span class="note">&nbsp;intercept and slope of ZZ</span></div>`);
+    h+=blk("var(--goods)","Equilibrium",`<div class="eq">${V("Y")}* = [${sb("c",0)} − ${sb("c",1)}${V("T")} + ${sb("b",0)} + ${V("G")} − ${sb("b",2)}${R}] / (1 − ${sb("c",1)} − ${sb("b",1)})</div>
+      <div class="eq strong">&emsp;= ${rv(s0.zInt,s1.zInt,0)} / ${rv(1-s0.m,1-s1.m,2)} = ${rv(s0.Y,s1.Y,0)}</div>
+      <div class="eq">&emsp;so ${V("C")}* = ${rv(s0.C,s1.C,0)}, &nbsp;${V("I")}* = ${rv(s0.I,s1.I,0)}, &nbsp;${V("G")} = ${nv("G")}</div>`);
+    const v=ext?"r":"i";
+    h+=blk("var(--goods)","IS curve",`<div class="prose">Solve ${V("Y")} = ${V("Z")} for ${V(v)}, since it is on the vertical axis:</div>
+      <div class="eq">${V(v)} = (${sb("c",0)} − ${sb("c",1)}${V("T")} + ${sb("b",0)} + ${V("G")}${ext?` − ${sb("b",2)}${V("x")}`:""}) / ${sb("b",2)} − [(1 − ${sb("c",1)} − ${sb("b",1)}) / ${sb("b",2)}]·${V("Y")}</div>
+      <div class="eq strong">&emsp;= ${rv(s0.isInt,s1.isInt,4)} − ${rv(s0.isSlope,s1.isSlope,6)}·${V("Y")} <span class="note">&nbsp;intercept and slope of IS</span></div>`+(ext?`<div class="prose">The risk premium ${V("x")} sits in the intercept of IS. Expected inflation does not appear in IS.</div>`:""));
+    h+=blk("var(--policy)","LM curve", ext
+      ? `<div class="eq strong">${V("r")} = ${V("r̄")} = ${rv(s0.r,s1.r,4)}</div><div class="prose">${mode==="real"?"The Fed picks the real rate directly; expected inflation changes the nominal rate it must set, not LM.":`The Fed picks the nominal rate, so LM sits at ${V("ī")} − ${PE}. A change in expected inflation moves LM.`}</div>`
+      : `<div class="eq strong">${V("i")} = ${V("ī")} = ${nv("ib")}</div><div class="prose">The Fed picks the rate. ${V("Y")} does not appear, so LM is flat.</div>`);
+    const mid=K*s0.Y-H*s1.i, two=dif(s0.i,s1.i)&&dif(s0.Y,s1.Y);
+    h+=blk("var(--money)","Money market",`<div class="prose"><b>We set the price level P = 1.</b> Then nominal income $${V("Y")} = ${V("P")}${V("Y")} equals real income ${V("Y")}, and money demand and supply are <b>real</b> money demand and <b>real</b> money supply.</div>
+      <div class="eq">Real money demand: &nbsp;${V("M")}ᵈ/${V("P")} = ${V("Y")}·${V("L")}(${V("i")}) ≈ ${V("k")}${V("Y")} − ${V("h")}${V("i")} = ${f(K,2)}${V("Y")} − ${H}${V("i")}</div>
+      ${ext?`<div class="prose">Money demand depends on the <b>nominal</b> rate ${V("i")}: holding money means giving up the nominal interest on bonds. That is why this panel's axis is the nominal rate.</div>`:""}
+      <div class="eq strong">${V("M")} = ${f(K,2)}×${rv(s0.Y,s1.Y,0)} − ${H}×${rv(s0.i,s1.i,4)} = ${rv(s0.M,s1.M,0)} <span class="note">&nbsp;what the Fed supplies to hold its rate</span></div>
+      ${two?`<div class="prose">In two rounds: ① at the old output, the new rate needs ${f(K,2)}×${f(s0.Y,0)} − ${H}×${f(s1.i,4)} = ${f(mid,0)} (a move along the old Mᵈ, ${signed(mid-s0.M,0)}). ② Output then moves to ${f(s1.Y,0)}, Mᵈ shifts by k·ΔY = ${signed(K*(s1.Y-s0.Y),0)}, and the Fed supplies that too.</div>`:""}`);
+    document.getElementById("alg").innerHTML=h;
+  }
+
+  // ---------------- narrative ----------------
+  const W={
+    ib:["The Fed raises its interest rate target.","The Fed lowers its interest rate target."],
+    pol:[()=>mode==="real"?"The Fed raises its real policy rate.":"The Fed raises its nominal policy rate.",()=>mode==="real"?"The Fed lowers its real policy rate.":"The Fed lowers its nominal policy rate."],
+    pie:["People expect more inflation.","People expect less inflation."],
+    x:["Lenders get more worried about default and demand a higher risk premium.","Lenders relax: the risk premium falls."],
+    G:["The government buys more goods and services.","The government buys fewer goods and services."],
+    T:["Taxes rise, so households consume less.","Taxes fall, so households consume more."],
+    c0:["Households feel more confident and spend more at every income level.","Households get worried and spend less at every income level."],
+    c1:["Households spend a larger share of each extra dollar of income.","Households spend a smaller share of each extra dollar of income."],
+    b0:["Firms turn optimistic and invest more.","Firms turn pessimistic and invest less."],
+    b1:["Firms' investment responds more strongly to sales.","Firms' investment responds less to sales."],
+    b2:["Investment becomes more sensitive to the interest rate.","Investment becomes less sensitive to the interest rate."]
+  };
+  const bracket = () => fw==="ext" ? "[c₀ − c₁T + b₀ + G − b₂(r̄ + x)]" : "[c₀ − c₁T + b₀ + G − b₂ī]";
+  const WH={
+    ib:()=>"ī is LM's whole equation, i = ī. In the goods market it enters investment as −b₂ī.",
+    pol:()=>mode==="real"?"r̄ is LM's whole equation, r = r̄. In the goods market it enters investment through the borrowing rate, −b₂(r̄ + x).":"ī sets LM through r̄ = ī − πᵉ, and enters investment through the borrowing rate.",
+    pie:()=>mode==="real"?"πᵉ links the two policy rates: ī = r̄ + πᵉ. The Fed holds r̄, so πᵉ only changes the nominal rate it must set.":"πᵉ links the two policy rates: r̄ = ī − πᵉ. The Fed holds ī, so πᵉ moves r̄ the other way.",
+    x:()=>"x is added to the policy rate to get the borrowing rate r̄ + x. It enters ZZ's bracket as −b₂x and the intercept of IS.",
+    G:()=>`G is in the bracket of the demand equation, ${bracket()}.`,
+    T:()=>"T enters the bracket as −c₁T: a change in T moves it by −c₁·ΔT.",
+    c0:()=>`c₀ is in the bracket of the demand equation, ${bracket()}.`,
+    c1:()=>"c₁ is in the slope of ZZ, (c₁ + b₁), and also in the bracket through −c₁T.",
+    b0:()=>`b₀ is in the bracket of the demand equation, ${bracket()}.`,
+    b1:()=>"b₁ is in the slope of ZZ, (c₁ + b₁), so it changes the multiplier.",
+    b2:()=>"b₂ multiplies the interest rate in investment. It is in ZZ's bracket and in both the intercept and slope of IS."
+  };
+  const only=k=>({...base,[k]:cur[k]});
+  function narrative(){
+    const ks=KEYS().filter(k=>cur[k]!==base[k]), box=document.getElementById("ledger"), ext=fw==="ext";
+    if(!ks.length){ box.innerHTML='<p class="empty">Move any slider or pick a scenario. Each letter you change gets a card here.</p>'; return; }
+    const s0=solve(base); let html="";
+    ks.forEach(k=>{
+      const s1=solve(only(k)), up=cur[k]>base[k], sym=symOf(k), wd=W[k][up?0:1];
+      let alg=`${sym} goes from ${fx(k,base[k])} to ${fx(k,cur[k])}. ${WH[k]()}`;
+      if(["pol","pie","x"].includes(k)) alg+=` Rates: ī ${f(s0.i,4)} → ${f(s1.i,4)}, r̄ ${f(s0.r,4)} → ${f(s1.r,4)}, borrowing rate ${f(s0.rb,4)} → ${f(s1.rb,4)}.`;
+      if(s1.zlb && !s0.zlb) alg+=` The zero lower bound binds: ī can't go below 0.`;
+      else if(!["pol","pie","x","ib"].includes(k) && dif(s0.zInt,s1.zInt) && !dif(s0.m,s1.m)) alg+=` The bracket goes from ${f(s0.zInt,0)} to ${f(s1.zInt,0)}.`;
+      let zz; const dI=s1.zInt-s0.zInt;
+      if(dif(s0.m,s1.m)) zz=`The slope of ZZ goes from ${f(s0.m,2)} to ${f(s1.m,2)}, so ZZ rotates and gets ${s1.m>s0.m?"steeper":"flatter"}. The multiplier goes from ${f(s0.mult,2)} to ${f(s1.mult,2)}.`;
+      else if(dif(s0.zInt,s1.zInt)) zz=`ZZ's intercept goes from ${f(s0.zInt,0)} to ${f(s1.zInt,0)}, so ZZ shifts ${dI>0?"up":"down"} in parallel by ${f(Math.abs(dI),0)}, and output ${dI>0?"rises":"falls"} by ${f(Math.abs(dI),0)} × ${f(s0.mult,2)} = ${f(Math.abs(s1.Y-s0.Y),0)}. ${["ib","pol","pie","x"].includes(k)?"The rate is inside ZZ's intercept, not on its axes.":`${sym} is not on this diagram's axes.`}`;
+      else zz="ZZ does not move."+(k==="pie"?" The borrowing rate did not change, so spending did not change.":"");
+      let islm;
+      if(dif(s0.isSlope,s1.isSlope)) islm=`IS's slope goes from −${f(s0.isSlope,6)} to −${f(s1.isSlope,6)}, so IS rotates and gets ${s1.isSlope<s0.isSlope?"flatter":"steeper"}.`;
+      else if(dif(s0.isInt,s1.isInt)) islm=`IS's intercept goes from ${f(s0.isInt,4)} to ${f(s1.isInt,4)}, so IS shifts ${s1.isInt>s0.isInt?"right (up)":"left (down)"}: at the same policy rate, output is ${s1.isInt>s0.isInt?"higher":"lower"}.`+(k==="x"?" The Fed's rate didn't change, but borrowers pay more at every r̄.":"");
+      else islm= dif(s0.r,s1.r) ? "IS does not move: the rate is on this diagram's vertical axis." : "IS does not move.";
+      if(dif(s0.r,s1.r)) islm+=` LM shifts ${s1.r>s0.r?"up":"down"}, from ${f(s0.r,4)} to ${f(s1.r,4)}, and the economy slides ${s1.r>s0.r?"up":"down"} along IS.`;
+      else islm+= dif(s0.Y,s1.Y) ? " LM does not move, so the economy slides along LM." : " LM does not move.";
+      let mm; const dY=s1.Y-s0.Y, mid=K*s0.Y-H*s1.i, r1=mid-s0.M, r2=s1.M-mid;
+      if(dif(r1,0) && dif(r2,0)) mm=`The Fed moves money in two rounds. ① At the old output ${f(s0.Y,0)}, getting the nominal rate to ${f(s1.i,4)} is a move along the old Mᵈ: the Fed ${r1>0?"adds":"drains"} ${f(Math.abs(r1),0)}. ② Output ${dY>0?"rises":"falls"} by ${f(Math.abs(dY),0)}, so Mᵈ shifts ${dY>0?"right":"left"} by k·ΔY = ${f(Math.abs(K*dY),0)}, and the Fed ${r2>0?"adds":"drains"} that too to hold the rate. Mˢ goes from ${f(s0.M,0)} to ${f(s1.M,0)}.`;
+      else if(dif(r1,0)) mm=`Output doesn't change, so Mᵈ stays put. The nominal rate moves from ${f(s0.i,4)} to ${f(s1.i,4)}, a move along Mᵈ: the Fed ${r1>0?"adds":"drains"} ${f(Math.abs(r1),0)}.`;
+      else if(dif(r2,0)) mm=`Output ${dY>0?"rises":"falls"} by ${f(Math.abs(dY),0)}, so real money demand shifts ${dY>0?"right":"left"} in parallel by k·ΔY = ${f(Math.abs(K*dY),0)}. To hold the rate at ${f(s0.i,4)}, the Fed ${r2>0?"adds":"drains"} the same amount: Mˢ goes from ${f(s0.M,0)} to ${f(s1.M,0)}.`;
+      else mm="Nothing moves in the money market.";
+      let rows=`<dt>Algebra</dt><dd>${alg}</dd><dt>${sw("var(--goods)")}ZZ</dt><dd>${zz}</dd><dt>${sw("var(--policy)")}IS-LM</dt><dd>${islm}</dd><dt>${sw("var(--money)")}Money</dt><dd>${mm}</dd>`;
+      if(ext){
+        let rt;
+        if(k==="x") rt=`The gap between the real policy rate and the borrowing rate goes from ${f(base.x,4)} to ${f(cur.x,4)}. The policy rates do not move.`;
+        else if(k==="pie") rt = mode==="real" ? `ī rises one-for-one with πᵉ (${f(s0.i,4)} → ${f(s1.i,4)}). r̄ and the borrowing rate stay put.` : `ī stays at ${f(s0.i,4)}, so r̄ goes from ${f(s0.r,4)} to ${f(s1.r,4)}, and the borrowing rate moves with it.`;
+        else if(k==="pol") rt=`${mode==="real"?"r̄ moves and ī follows":"ī moves and r̄ follows"}. With x unchanged, the borrowing rate moves by the same ${f(Math.abs(s1.rb-s0.rb),4)}.`;
+        else rt="The rates do not change.";
+        rows+=`<dt>${sw("var(--money)")}Rates</dt><dd>${rt}</dd>`;
+      }
+      html+=`<article class="ev"><header><span class="tag">${sym} ${up?"↑":"↓"}</span><span class="w">${typeof wd==="function"?wd():wd}</span></header><dl>${rows}</dl></article>`;
+    });
+    const S0=solve(base), S1=solve(cur), dY=S1.Y-S0.Y; let extra;
+    if(ks.length===1){
+      const k=ks[0], dv=cur[k]-base[k];
+      if(["G","c0","b0"].includes(k)) extra=`ΔY*/Δ${SYM[k]} = ${f(dY/dv,2)}: the multiplier 1/(1 − c₁ − b₁).`;
+      else if(k==="T") extra=`ΔY*/ΔT = ${f(dY/dv,2)} = −c₁/(1 − c₁ − b₁).`;
+      else if(k==="x") extra=`ΔY*/Δx = ${f(dY/dv,0)}. A one-point rise in the risk premium (0.01) costs ${f(Math.abs(dY/dv)*0.01,1)} of output, the same as a one-point rise in r̄.`;
+      else if(k==="ib"||k==="pol") extra = S1.zlb ? "The zero lower bound stopped the cut, so output rose less than the slider asked for." : `ΔY*/Δ${symOf(k)} = ${f(dY/dv,0)} = −b₂/(1 − c₁ − b₁). A one-point move (0.01) changes output by ${f(Math.abs(dY/dv)*0.01,1)}.`;
+      else if(k==="pie") extra = mode==="real" ? "Output does not change: the Fed kept the real rate fixed by moving its nominal rate." : `With ī fixed, higher expected inflation lowers the real rate and raises output: ΔY*/Δπᵉ = ${f(dY/dv,0)}.`;
+      else extra="This letter changes a slope, so the size of the effect depends on where you start.";
+    } else extra="Several letters changed. Each card shows one change on its own, from the same starting point; the numbers above are their combined effect.";
+    html+=`<div class="result"><div class="lb">Result</div><div class="nums">Y* ${f(S0.Y,0)} → ${f(S1.Y,0)} (${signed(dY,0)}) · ${ext?`r̄ ${f(S0.r,4)} → ${f(S1.r,4)} · borrowing ${f(S0.rb,4)} → ${f(S1.rb,4)}`:`i* ${f(S0.i,4)} → ${f(S1.i,4)}`} · M/P ${f(S0.M,0)} → ${f(S1.M,0)}</div><p>${extra}</p></div>
+      <p class="take">${ext?"Spending responds to what borrowers pay. The Fed controls only the first step of the ladder.":"Point A moved in all three diagrams at once. One letter changed, and there is one new equilibrium, seen three ways."}</p>`;
+    box.innerHTML=html;
+  }
+
+  // ================= BASIC MODEL: identical to the Short-Run Lab =================
+  const KB=["ib","G","T","c0","c1","b0","b1","b2"];
+  function chipsB(){
+    const s0=solve(base), s1=solve(cur), moved=KB.some(k=>cur[k]!==base[k]), c=[];
     if(!moved) c.push(["","<b>Baseline.</b> Move a slider or pick a scenario."]);
     else{
       if(dif(s0.m,s1.m)) c.push(["rot",`<b>ZZ</b> rotates, ${s1.m>s0.m?"steeper":"flatter"}`]);
@@ -439,24 +699,23 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
       if(dif(s0.i,s1.i)) c.push(["shift",`<b>LM</b> shifts ${s1.i>s0.i?"up":"down"}`]);
       else c.push(dif(s0.Y,s1.Y)?["along","<b>LM</b> stays put · move along it"]:["","<b>LM</b> unchanged"]);
       c.push(dif(s0.Y,s1.Y)?["shift",`<b>Mᵈ</b> shifts ${s1.Y>s0.Y?"right":"left"}`]:["","<b>Mᵈ</b> unchanged"]);
-      c.push(dif(s0.M,s1.M)?["shift",`<b>Mˢ</b> shifts ${s1.M>s0.M?"right":"left"}`]:["","<b>Mˢ</b> unchanged"]);
+      if(dif(s0.M,s1.M) && dif(s0.i,s1.i) && dif(s0.Y,s1.Y)){ const mid=K*s0.Y-H*s1.i;
+        c.push(["shift",`<b>Mˢ</b> ${s1.M>s0.M?"rises":"falls"} in two rounds: ① ${signed(mid-s0.M,0)} ② ${signed(s1.M-mid,0)}`]); }
+      else c.push(dif(s0.M,s1.M)?["shift",`<b>Mˢ</b> shifts ${s1.M>s0.M?"right":"left"}`]:["","<b>Mˢ</b> unchanged"]);
     }
     document.getElementById("chips").innerHTML=c.map(x=>`<span class="chip ${x[0]}">${x[1]}</span>`).join("");
   }
-  function kpis(){
+  function kpisB(){
     const s0=solve(base), s1=solve(cur);
     const rows=[["Output","Y*","Y",0],["Interest rate","i*","i",4],["Real money","M/P","M",0],["Consumption","C*","C",0],["Investment","I*","I",0],["Multiplier","","mult",2]];
-    document.getElementById("kpis").innerHTML=rows.map(([name,sym,key,d])=>{
+    (document.getElementById("kpis").style.gridTemplateColumns=""), document.getElementById("kpis").innerHTML=rows.map(([name,sym,key,d])=>{
       const a=s0[key], b=s1[key], ch=dif(a,b);
       return `<div class="kpi"><div class="k">${name} <var>${sym}</var></div><div class="v">${f(b,d)}${key==="i"?`<span style="font-size:12px;color:var(--mut)"> = ${f(b*100,2)}%</span>`:""}</div>
         <div class="f">${ch?`from ${f(a,d)} <b>${signed(b-a,d)}</b>`:"unchanged"}</div></div>`; }).join("");
   }
 
   // ---------------- algebra ----------------
-  const V = x => `<var>${x}</var>`;
-  function nv(k){ const v=fx(k,cur[k]); return cur[k]!==base[k] ? `<span class="c n">${v}</span><span class="w">was ${fx(k,base[k])}</span>` : `<span class="n">${v}</span>`; }
-  function rv(a,b,d){ const v=f(b,d); return dif(a,b) ? `<span class="c n">${v}</span><span class="w">was ${f(a,d)}</span>` : `<span class="n">${v}</span>`; }
-  function algebra(){
+  function algebraB(){
     const s0=solve(base), s1=solve(cur);
     const sw=c=>`<span class="sw" style="background:${c}"></span>`;
     document.getElementById("alg").innerHTML=`
@@ -494,7 +753,7 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
   }
 
   // ---------------- narrative ----------------
-  const WORDS={
+  const WORDS_B={
     G:["The government buys more goods and services.","The government buys fewer goods and services."],
     T:["Taxes rise, so households have less disposable income and consume less.","Taxes fall, so households have more disposable income and consume more."],
     c0:["Households feel more confident and spend more at every income level.","Households get worried and spend less at every income level."],
@@ -504,7 +763,7 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
     b2:["Investment becomes more sensitive to the interest rate.","Investment becomes less sensitive to the interest rate."],
     ib:["The Fed raises its interest rate target.","The Fed lowers its interest rate target."]
   };
-  const WHERE={
+  const WHERE_B={
     G:"G is in the bracket of the demand equation, [c₀ − c₁T + b₀ + G − b₂ī].",
     T:"T enters the bracket as −c₁T: a change in T moves it by −c₁·ΔT.",
     c0:"c₀ is in the bracket of the demand equation, [c₀ − c₁T + b₀ + G − b₂ī].",
@@ -514,16 +773,16 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
     b2:"b₂ multiplies the interest rate in investment, −b₂i. It is in ZZ's bracket (−b₂ī) and in the slope of IS.",
     ib:"ī is LM's whole equation, i = ī. In the goods market it enters investment as −b₂ī."
   };
-  const only=k=>({...base,[k]:cur[k]});
-  function narrative(){
-    const changed=KEYS.filter(k=>cur[k]!==base[k]), box=document.getElementById("ledger");
+  const onlyB=k=>({...base,[k]:cur[k]});
+  function narrativeB(){
+    const changed=KB.filter(k=>cur[k]!==base[k]), box=document.getElementById("ledger");
     if(!changed.length){ box.innerHTML='<p class="empty">Move any slider or pick a scenario. Each letter you change gets a card here.</p>'; return; }
     const s0=solve(base);
     const sw=c=>`<span class="sw" style="background:${c}"></span>`;
     let html="";
     changed.forEach(k=>{
-      const s1=solve(only(k)), up=cur[k]>base[k];
-      let alg=`${SYM[k]} goes from ${fx(k,base[k])} to ${fx(k,cur[k])}. ${WHERE[k]}`;
+      const s1=solve(onlyB(k)), up=cur[k]>base[k];
+      let alg=`${SYM[k]} goes from ${fx(k,base[k])} to ${fx(k,cur[k])}. ${WHERE_B[k]}`;
       if(dif(s0.zInt,s1.zInt) && !dif(s0.m,s1.m)) alg+=` The bracket goes from ${f(s0.zInt,0)} to ${f(s1.zInt,0)}.`;
       let zz; const dI=s1.zInt-s0.zInt, dm=s1.m-s0.m;
       if(dif(s0.m,s1.m)) zz=`The slope of ZZ goes from ${f(s0.m,2)} to ${f(s1.m,2)}, so ZZ rotates and gets ${dm>0?"steeper":"flatter"}${dif(s0.zInt,s1.zInt)?`, and its intercept moves from ${f(s0.zInt,0)} to ${f(s1.zInt,0)}`:""}. The multiplier goes from ${f(s0.mult,2)} to ${f(s1.mult,2)}.`;
@@ -535,10 +794,10 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
       else if(dif(s0.isInt,s1.isInt)) islm=`IS's intercept goes from ${f(s0.isInt,4)} to ${f(s1.isInt,4)}, so IS shifts ${dIS>0?"right (equivalently, up)":"left (equivalently, down)"}: at the same interest rate, output is ${dIS>0?"higher":"lower"}. LM does not move, because ${SYM[k]} is not in LM's equation.`;
       else islm="Neither IS nor LM moves.";
       let mm; const dY=s1.Y-s0.Y, dM=s1.M-s0.M;
-      if(k==="ib") mm=`To move the rate to ${fx(k,cur[k])}, the Fed ${dM>0?"adds":"drains"} money: Mˢ goes from ${f(s0.M,0)} to ${f(s1.M,0)}. Output ${dY>0?"rises":"falls"} too, so Mᵈ shifts ${dY>0?"right":"left"} by k·ΔY = ${f(Math.abs(K*dY),0)} at every i.`;
+      if(k==="ib"){ const mid=K*s0.Y-H*s1.i; mm=`The Fed moves money in two rounds. ① At the old output ${f(s0.Y,0)}, getting the rate to ${fx(k,cur[k])} is a move along the old Mᵈ: the Fed ${mid>s0.M?"adds":"drains"} h·Δī = ${f(Math.abs(mid-s0.M),0)}. ② The ${up?"higher":"lower"} rate ${dY>0?"raises":"lowers"} output by ${f(Math.abs(dY),0)}, so Mᵈ shifts ${dY>0?"right":"left"} by k·ΔY = ${f(Math.abs(K*dY),0)}, and the Fed ${dY>0?"adds":"drains"} that too to hold the rate. In total Mˢ goes from ${f(s0.M,0)} to ${f(s1.M,0)}.`; }
       else if(dif(s0.Y,s1.Y)) mm=`Output ${dY>0?"rises":"falls"} by ${f(Math.abs(dY),0)}, so real money demand shifts ${dY>0?"right":"left"} in parallel by k·ΔY = ${f(K,2)} × ${f(Math.abs(dY),0)} = ${f(Math.abs(K*dY),0)}. To keep i at ${fx("ib",base.ib)}, the Fed ${dM>0?"adds":"drains"} the same amount: Mˢ goes from ${f(s0.M,0)} to ${f(s1.M,0)}.`;
       else mm="Nothing moves in the money market.";
-      html+=`<article class="ev"><header><span class="tag">${SYM[k]} ${up?"↑":"↓"}</span><span class="w">${WORDS[k][up?0:1]}</span></header>
+      html+=`<article class="ev"><header><span class="tag">${SYM[k]} ${up?"↑":"↓"}</span><span class="w">${WORDS_B[k][up?0:1]}</span></header>
         <dl><dt>Algebra</dt><dd>${alg}</dd><dt>${sw("var(--goods)")}ZZ</dt><dd>${zz}</dd><dt>${sw("var(--policy)")}IS-LM</dt><dd>${islm}</dd><dt>${sw("var(--money)")}Money</dt><dd>${mm}</dd></dl></article>`;
     });
     const S0=solve(base), S1=solve(cur), dY=S1.Y-S0.Y;
@@ -557,31 +816,64 @@ svg#fig{ width:100%; min-width:600px; height:auto; display:block; font-family:va
     box.innerHTML=html;
   }
 
-  // ---------------- wiring ----------------
-  const inp={}; KEYS.forEach(k=>inp[k]=document.getElementById(k));
-  function sync(){ KEYS.forEach(k=>{ inp[k].value=cur[k];
-    document.getElementById("o"+k).textContent=fx(k,cur[k])+(k==="ib"?` (${f(cur[k]*100,2)}%)`:"");
-    const d=document.getElementById("d"+k), ch=cur[k]!==base[k];
-    d.hidden=!ch; if(ch) d.textContent=signed(cur[k]-base[k],DEC[k]); }); }
-  function render(){ sync(); draw(); chips(); kpis(); algebra(); narrative(); }
-  KEYS.forEach(k=>inp[k].addEventListener("input",()=>{ cur[k]=parseFloat(inp[k].value); render(); }));
-  document.getElementById("zoom").addEventListener("change",render);
-  document.getElementById("reset").addEventListener("click",()=>{ base={...DEF}; cur={...DEF}; render(); });
-  document.getElementById("rebase").addEventListener("click",()=>{ base={...cur}; render(); });
-  const PRE=[
-    ["Government spends more","G +100",{G:350}],
-    ["Tax cut","T −100",{T:0}],
-    ["Households get worried","c₀ −100",{c0:0}],
-    ["Firms turn optimistic","b₀ +100",{b0:250}],
-    ["Fed cuts its rate","ī −0.02",{ib:0.02}],
-    ["Tax cut + Fed raises ī","T −100, ī +0.02",{T:0,ib:0.06}]
-  ];
-  const pb=document.getElementById("presets");
-  PRE.forEach(([n,t,chg])=>{ const b=document.createElement("button"); b.type="button";
-    b.innerHTML=`${n}<span>${t}</span>`; b.addEventListener("click",()=>{ base={...DEF}; cur={...DEF,...chg}; render(); }); pb.appendChild(b); });
 
-  cur={...DEF};   // open on the plain baseline
-  render();
+  // ---------------- wiring ----------------
+  const ALL=["ib","pol","pie","x",...GOODS], inp={}; ALL.forEach(k=>inp[k]=document.getElementById(k));
+  function setMode(m){ if(m===mode) return; [base,cur].forEach(p=>{ p.pol = m==="nom" ? +(p.pol+p.pie).toFixed(6) : +(p.pol-p.pie).toFixed(6); }); mode=m; }
+  const PRE={
+    basic:[["Government spends more","G +100",{G:350}],["Tax increase","T +100",{T:200}],["Households get worried","c₀ −100",{c0:0}],
+           ["Firms turn optimistic","b₀ +100",{b0:250}],["Fed raises its rate","ī +0.02",{ib:0.06}],["Tax cut + Fed cuts ī","T −100, ī −0.02",{T:0,ib:0.02}]],
+    ext:[["Risk premium jumps","x +0.03",{x:0.04},"real"],["Fed offsets the jump","x +0.03, r̄ −0.03",{x:0.04,pol:0.00},"real"],
+         ["Bigger shock hits the zero lower bound","x +0.06, r̄ to floor",{x:0.07,pol:-0.02},"real"],
+         ["Expected inflation rises, Fed holds ī","πᵉ +0.02",{pie:0.04},"nom"],["Expected inflation rises, Fed holds r̄","πᵉ +0.02",{pie:0.04},"real"],
+         ["2008: the crisis","x +0.04, c₀ −40, b₀ −20",{x:0.05,c0:60,b0:130},"real"],
+         ["2008: the policy response","from the crisis: G +20, x −0.005, r̄ to floor",{x:0.045,c0:60,b0:130,G:270,pol:-0.02},"real",{x:0.05,c0:60,b0:130}]]
+  };
+  function presets(){
+    const pb=document.getElementById("presets"); pb.innerHTML="";
+    PRE[fw].forEach(([n,t,chg,m,bchg])=>{ const b=document.createElement("button"); b.type="button"; b.innerHTML=`${n}<span>${t}</span>`;
+      b.addEventListener("click",()=>{ if(m) mode=m; base={...DEF(),...(bchg||{})}; cur={...DEF(),...chg}; render(); }); pb.appendChild(b); });
+    document.getElementById("scenHint").textContent = fw==="basic"
+      ? "Each scenario starts from the baseline. “Start from here” makes the current position the new baseline, so you can stack changes."
+      : "Each scenario starts from the baseline, except “the policy response”, which starts from the 2008 crisis. “Start from here” lets you stack changes.";
+  }
+  function sync(){
+    const ext=fw==="ext";
+    document.getElementById("fwBasic").setAttribute("aria-pressed", !ext);
+    document.getElementById("fwExt").setAttribute("aria-pressed", ext);
+    document.getElementById("modeBox").hidden=!ext; document.getElementById("slPol").hidden=!ext;
+    document.getElementById("slIb").hidden=ext; document.getElementById("wedges").hidden=!ext; document.getElementById("newbox").hidden=!ext;
+    document.getElementById("algSub").textContent = ext ? "Every equation behind the diagrams, with the current numbers plugged in. Highlighted numbers changed; the old value is next to them. All rates are decimals: 0.04 means 4%." : "Every equation behind the three diagrams, with the current numbers plugged in. Highlighted numbers changed; the old value is next to them.";
+    document.getElementById("ledSub").textContent = ext ? "One card per letter you moved: the story in words, where the letter sits in the algebra, and what it does in each diagram." : "One card per letter you moved: the story in words, where the letter sits in the algebra, and what it does in each window.";
+    document.getElementById("kMoney").textContent = ext ? "Mᵈ, πᵉ, x" : "Mᵈ";
+    document.getElementById("kMoneyT").textContent = ext ? "money demand, the wedges" : "money demand";
+    document.getElementById("eyebrow").textContent = ext ? "ECON 3204 · Macroeconomic Theory · Module 1 · Extending IS-LM, Chapter 6" : "ECON 3204 · Macroeconomic Theory · Module 1 · The short run, Chapters 3–5";
+    document.getElementById("fedGrp").style.order = ext ? "1" : "3";
+    document.getElementById("wedges").style.order = "2";
+    document.getElementById("goodsGrp").style.order = ext ? "3" : "2";
+    document.getElementById("b2Label").innerHTML = ext ? 'Investment and the borrowing rate <var>b</var><sub>2</sub>' : 'Investment and <var>i</var>, <var>b</var><sub>2</sub>';
+    document.getElementById("intro").innerHTML = ext
+      ? 'The Fed sets a <b>policy rate</b>. Households and firms pay a <b>borrowing rate</b>. Two wedges sit between them: <b>expected inflation</b> turns the nominal rate into a real rate, and lenders add a <b>risk premium</b>. Spending responds to the borrowing rate. Every slider still moves one letter in one equation.'
+      : 'Each slider changes <b>one letter in one equation</b>. The goods market, IS-LM, and the money market are three views of the same equilibrium, point A. For any change, ask two things: <b>which equation is the letter in</b>, and <b>is it on this diagram\'s axis?</b> On the axis, you move along a curve. Off the axis, the curve shifts.';
+    document.getElementById("mReal").setAttribute("aria-pressed", mode==="real");
+    document.getElementById("mNom").setAttribute("aria-pressed", mode==="nom");
+    document.getElementById("polLabel").innerHTML = mode==="real" ? 'Real policy rate <var>r̄</var>' : 'Nominal policy rate <var>ī</var>';
+    document.getElementById("segnote").textContent = mode==="real" ? "Textbook simplification: the Fed chooses the real rate and moves ī as expected inflation changes." : "The Fed holds its nominal rate; the real rate moves with expected inflation.";
+    inp.pol.min = mode==="real" ? "-0.04" : "0"; inp.pol.max = mode==="real" ? "0.10" : "0.12";
+    document.body.classList.toggle("ext", ext);
+    ALL.forEach(k=>{ inp[k].value=cur[k]; document.getElementById("o"+k).textContent=fx(k,cur[k])+(k==="ib"?` (${f(cur[k]*100,2)}%)`:"");
+      const d=document.getElementById("d"+k), ch=cur[k]!==base[k]; d.hidden=!ch; if(ch) d.textContent=signed(cur[k]-base[k],DEC[k]); });
+  }
+  function render(){ sync(); draw(); if(fw==="basic"){ chipsB(); kpisB(); algebraB(); narrativeB(); } else { chips(); kpis(); algebra(); narrative(); } }
+  ALL.forEach(k=>inp[k].addEventListener("input",()=>{ cur[k]=parseFloat(inp[k].value); render(); }));
+  document.getElementById("fwBasic").addEventListener("click",()=>{ fw="basic"; presets(); render(); });
+  document.getElementById("fwExt").addEventListener("click",()=>{ fw="ext"; presets(); render(); });
+  document.getElementById("mReal").addEventListener("click",()=>{ setMode("real"); render(); });
+  document.getElementById("mNom").addEventListener("click",()=>{ setMode("nom"); render(); });
+  document.getElementById("zoom").addEventListener("change",render);
+  document.getElementById("reset").addEventListener("click",()=>{ mode="real"; base=DEF(); cur=DEF(); render(); });
+  document.getElementById("rebase").addEventListener("click",()=>{ base={...cur}; render(); });
+  presets(); render();
 })();
 </script>
 
