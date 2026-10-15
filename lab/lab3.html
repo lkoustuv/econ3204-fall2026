@@ -104,6 +104,7 @@ button.act{ text-align:left; font-size:12.5px; }
 svg.fig{ width:100%; height:auto; display:block; font-family:var(--f-body); }
 svg.fig text{ fill:var(--mut); font-size:12px; }
 svg.fig .tk{ font-family:var(--f-mono); font-size:11px; fill:var(--mut); }
+svg.fig .zl{ paint-order:stroke; stroke:var(--panel); stroke-width:4px; stroke-linejoin:round; font-weight:600; }
 svg.fig .axl{ font-size:12.5px; fill:var(--ink); }
 svg.fig .lbl{ font-family:var(--f-mono); font-size:12.5px; font-weight:600; }
 svg.fig .ann{ font-size:11.5px; fill:var(--mut); font-style:italic; }
@@ -217,12 +218,13 @@ let scenOn = null;
 /* ---------- model ---------- */
 function solve(s){
   const un = unOf(s), Yn = L*(1 - un);
-  const Y = s.A - B*(s.r + s.x);
-  const u = 1 - Y/L;
   const pie = s.mode === 'anch' ? s.pibar : s.pilag;      // anchored: πᵉ = π̄ · de-anchored: πᵉ = π₋₁
+  const floor = -pie, r = Math.max(s.r, floor), zlb = s.r < floor - 1e-9;   // i = r + πᵉ cannot go below 0
+  const Y = s.A - B*(r + s.x);
+  const u = 1 - Y/L;
   const pi = pie + (s.alpha/L)*(Y - Yn);                   // = πᵉ − α(u − uₙ)
   const rn = (s.A - Yn)/B - s.x;
-  return {un, Yn, Y, u, pi, pie, rn, i: s.r + pie, wr: 1/(1 + s.m)};
+  return {un, Yn, Y, u, pi, pie, rn, r, floor, zlb, i: r + pie, wr: 1/(1 + s.m)};
 }
 
 /* ---------- helpers ---------- */
@@ -277,7 +279,7 @@ const SL = {
               {k:'x', lab:'Risk premium <var>x</var>', min:0, max:0.06, step:0.0025, fmt:p1} ],
   'g-fed':  [ {k:'r', lab:'Real policy rate <var>r̄</var>', min:-0.04, max:0.10, step:0.0005, fmt:p2} ],
   'g-exp':  [ {k:'pibar', lab:'Fed\'s inflation target <var>π̄</var>', min:0, max:0.06, step:0.0025, fmt:p1},
-              {k:'pilag', lab:'Last year\'s inflation <var>π</var><sub>−1</sub>', min:-0.04, max:0.14, step:0.0005, fmt:p2} ],
+              {k:'pilag', lab:'Last year\'s inflation <var>π</var><sub>−1</sub>', min:-0.12, max:0.14, step:0.0005, fmt:p2} ],
   'g-lab':  [ {k:'m', lab:'Markup <var>m</var>', min:0, max:0.10, step:0.0025, fmt:p1},
               {k:'z', lab:'Catch-all <var>z</var> (benefits, protection)', min:-0.03, max:0.05, step:0.0025, fmt:p1},
               {k:'alpha', lab:'Wage response to unemployment <var>α</var>', min:0.2, max:1.2, step:0.01, fmt:f2} ]
@@ -299,6 +301,8 @@ const SC = [
    l:'IS shifts left. Output falls below Yₙ, so inflation comes in below expected inflation.' + NEXT + 'press <b>Fed moves r̄ to rₙ</b>. Output returns to Yₙ at a lower interest rate.'},
   {t:'Fed raises the policy rate', s:'r̄ from 2% to 3%', to:{r:0.03},
    l:'LM shifts up. The economy moves up along IS: output falls below Yₙ and inflation falls below expected inflation. IS, PC and WS-PS do not move.'},
+  {t:'Deep recession and the zero lower bound', s:'A −12 · Fed cuts i to 0 · de-anchored', to:{A:DEF.A - 12, r:-0.04, mode:'dean'},
+   l:'IS shifts far left. The neutral rate rₙ falls below −2%. The Fed cuts the nominal rate to zero, which gives r = −πᵉ = −2%, still above rₙ. Output stays below Yₙ and inflation falls.' + NEXT + 'press <b>Next year</b> a few times. Expected inflation falls, the floor −πᵉ rises, the real rate goes <i>up</i> and output falls further: the deflation spiral. Then switch to <b>Anchored</b>: the floor stays at −π̄ and the spiral stops.'},
   {h:'Labor market'},
   {t:'Oil price rises', s:'markup m from 2.5% to 3.5%', to:{m:0.035},
    l:'PS shifts down, so uₙ rises and Yₙ falls. The PC moves left with Yₙ. Output has not changed, so it is now above the new Yₙ and inflation rises.' + NEXT + 'press <b>Fed moves r̄ to rₙ</b>. Output falls while inflation is high: stagflation.'},
@@ -325,24 +329,28 @@ $('reset').addEventListener('click', () => { Object.assign(st, DEF); base = Obje
 function drawMain(S, S0){
   const svg = $('fg-main'); svg.innerHTML = '';
   const ys = [S.Y, S0.Y, S.Yn, S0.Yn]; const yN = nice(Math.min(...ys) - 9, Math.max(...ys) + 9, 6);
-  const rs = [st.r, base.r, S.rn, S0.rn, 0]; const rN = nice(Math.min(...rs) - 0.012, Math.max(...rs) + 0.012, 5);
+  const rs = [S.r, S0.r, S.rn, S0.rn, 0, ...(S.zlb || S.r - S.floor < 0.02 ? [S.floor] : [])]; const rN = nice(Math.min(...rs) - 0.012, Math.max(...rs) + 0.012, 5);
   const Pa = panel(svg, {x:62, y:44, w:470, h:230, xd:[yN.lo, yN.hi], yd:[rN.lo, rN.hi], xt:yN.ticks, yt:rN.ticks, xf:null, yf:pf(rN.step), yl:'Real interest rate, r', title:'IS-LM', zero:true});
   const isR = (Y, s) => (s.A - Y)/B - s.x;
-  const isMoved = !near(st.A, base.A) || !near(st.x, base.x), lmMoved = !near(st.r, base.r);
-  if (isMoved){ bandX(Pa, base.A - B*(st.r + base.x), st.A - B*(st.r + st.x)); curve(Pa, Y => isR(Y, base), 'var(--goods)', {w:2, dash:'6 5', op:.5}); }
-  if (lmMoved){ bandY(Pa, base.r, st.r); hline(Pa, base.r, 'var(--policy)', {w:2, dash:'6 5', op:.5}); }
+  const isMoved = !near(st.A, base.A) || !near(st.x, base.x), lmMoved = !near(S.r, S0.r);
+  if (isMoved){ bandX(Pa, base.A - B*(S.r + base.x), st.A - B*(S.r + st.x)); curve(Pa, Y => isR(Y, base), 'var(--goods)', {w:2, dash:'6 5', op:.5}); }
+  if (lmMoved){ bandY(Pa, S0.r, S.r); hline(Pa, S0.r, 'var(--policy)', {w:2, dash:'6 5', op:.5}); }
   vline(Pa, S.Yn, 'var(--ink)', {dash:'5 4', op:.6});
   if (!near(S.Yn, S0.Yn)) vline(Pa, S0.Yn, 'var(--ink)', {dash:'2 4', op:.35});
   curve(Pa, Y => isR(Y, st), 'var(--goods)');
-  hline(Pa, st.r, 'var(--policy)');
-  drop(Pa, S.Y, st.r);
-  if (isMoved || lmMoved) dot(Pa, S0.Y, base.r, 'var(--faint)', 4.5);
-  dot(Pa, S.Y, st.r, 'var(--ink)', 6.5);
-  T(Pa, Pa.X(S.Y) + 9, Pa.Y(st.r) - 9, 'A', 'ptl');
-  T(Pa, Pa.o.x + Pa.o.w + 6, Pa.Y(st.r) + 4, 'LM', 'lbl', 'var(--policy)');
+  if (S.floor > rN.lo && S.floor < rN.hi){   // zero lower bound: r cannot go below -πᵉ
+    E('rect', {x:Pa.o.x, y:Pa.Y(S.floor), width:Pa.o.w, height:Math.max(0, Pa.Y(rN.lo) - Pa.Y(S.floor)), css:'fill:var(--policy);opacity:.07'}, Pa.g);
+    hline(Pa, S.floor, 'var(--policy)', {w:1.5, dash:'2 4', op:.9});
+    T(Pa, Pa.o.x + Pa.o.w - 6, Pa.Y(S.floor) + (Pa.Y(S.floor) - Pa.o.y < 24 ? 15 : -7), `zero lower bound: r ≥ −πᵉ = ${pct(S.floor)}`, 'tk zl', 'var(--policy)', 'end'); }
+  hline(Pa, S.r, 'var(--policy)');
+  drop(Pa, S.Y, S.r);
+  if (isMoved || lmMoved) dot(Pa, S0.Y, S0.r, 'var(--faint)', 4.5);
+  dot(Pa, S.Y, S.r, 'var(--ink)', 6.5);
+  T(Pa, Pa.X(S.Y) + 9, Pa.Y(S.r) - 9, 'A', 'ptl');
+  T(Pa, Pa.o.x + Pa.o.w + 6, Pa.Y(S.r) + 4, 'LM', 'lbl', 'var(--policy)');
   T(Pa, Pa.o.x + Pa.o.w + 6, clamp(Pa.Y(isR(yN.hi, st)), Pa.o.y + 8, Pa.o.y + Pa.o.h) + 4, 'IS', 'lbl', 'var(--goods)');
   T(Pa, Pa.X(S.Yn) + 4, Pa.o.y + 14, 'Yₙ', 'tk');
-  if (!near(st.r, S.rn, 2e-4)) { E('line', {x1:Pa.X(S.Yn) - 7, x2:Pa.X(S.Yn) + 7, y1:Pa.Y(S.rn), y2:Pa.Y(S.rn), css:'stroke:var(--ink);stroke-width:2'}, Pa.g);
+  if (!near(S.r, S.rn, 2e-4)) { E('line', {x1:Pa.X(S.Yn) - 7, x2:Pa.X(S.Yn) + 7, y1:Pa.Y(S.rn), y2:Pa.Y(S.rn), css:'stroke:var(--ink);stroke-width:2'}, Pa.g);
     T(Pa, Pa.X(S.Yn) - 10, Pa.Y(S.rn) + 4, 'rₙ = ' + pct(S.rn,1), 'tk', null, 'end'); }
   // PC: vertical axis is inflation minus expected inflation
   const anch = st.mode === 'anch';
@@ -362,7 +370,7 @@ function drawMain(S, S0){
   const gap0 = S.pi - S.pie;
   E('line', {x1:Pb.X(S.Y), x2:Pb.X(S.Y), y1:Pb.Y(0), y2:Pb.Y(gap0), css:'stroke:var(--amber);stroke-width:5;opacity:.85'}, Pb.c);
   drop(Pb, S.Y, gap0);
-  E('line', {x1:Pa.X(S.Y), x2:Pa.X(S.Y), y1:Pa.Y(st.r), y2:Pb.Y(gap0), css:sty('var(--ink)', 1, '3 3', .3)}, svg);
+  E('line', {x1:Pa.X(S.Y), x2:Pa.X(S.Y), y1:Pa.Y(S.r), y2:Pb.Y(gap0), css:sty('var(--ink)', 1, '3 3', .3)}, svg);
   if (pcMoved || isMoved || lmMoved) dot(Pb, S0.Y, S0.pi - S0.pie, 'var(--faint)', 4.5);
   dot(Pb, S.Y, gap0, 'var(--pc)', 6.5);
   T(Pb, Pb.X(S.Y) + 9, Pb.Y(gap0) - 9, 'A', 'ptl');
@@ -406,11 +414,11 @@ function render(){
   // chips
   const c = [];
   if (!near(st.A, base.A) || !near(st.x, base.x)) c.push(['shift', `<b>IS</b> shifts ${(st.A - B*st.x) > (base.A - B*base.x) ? 'right' : 'left'}`]);
-  if (!near(st.r, base.r)) c.push(['shift', `<b>LM</b> ${st.r > base.r ? 'up' : 'down'}: r̄ ${pct(base.r)} → ${pct(st.r)}`]);
+  if (!near(S.r, S0.r)) c.push(['shift', `<b>LM</b> ${S.r > S0.r ? 'up' : 'down'}: r ${pct(S0.r)} → ${pct(S.r)}`]);
   if (!near(S.pie, S0.pie)) c.push(['along', `πᵉ ${pct(S0.pie)} → <b>${pct(S.pie)}</b>`]);
   if (!near(S.un, S0.un)) c.push(['shift', `<b>uₙ</b> ${pct(S0.un)} → ${pct(S.un)} · Yₙ and PC move`]);
   if (!near(S.Y, S0.Y, 1e-4)) c.push(['along', `Y ${S0.Y.toFixed(1)} → <b>${S.Y.toFixed(1)}</b>`]);
-  if (S.i < -1e-9) c.push(['warnc', `<b>i = ${pct(S.i)}</b> is below zero: the Fed cannot set this r̄`]);
+  if (S.zlb) c.push(['warnc', `<b>Zero lower bound:</b> the Fed wants r̄ = ${pct(st.r)}, but with i = 0 the lowest real rate is −πᵉ = ${pct(S.floor)}`]);
   if (!c.length) c.push(['', 'Medium run. Pick a scenario or move a slider; dashed lines keep the starting point.']);
   $('chips').innerHTML = c.map(x => `<span class="chip ${x[0]}">${x[1]}</span>`).join('');
   // kpis
@@ -418,15 +426,15 @@ function render(){
   const K = [ ['Output <var>Y</var>', S.Y.toFixed(1), dl(S.Y, S0.Y, v => sgn(v))], ['Natural output <var>Y</var><sub>n</sub>', S.Yn.toFixed(1), dl(S.Yn, S0.Yn, v => sgn(v))],
     ['Unemployment <var>u</var>', pct(S.u), dl(S.u, S0.u, pp)], ['Natural rate <var>u</var><sub>n</sub>', pct(S.un), dl(S.un, S0.un, pp)],
     ['Inflation <var>π</var>', pct(S.pi), dl(S.pi, S0.pi, pp)], ['Expected <var>π</var><sup>e</sup>', pct(S.pie), dl(S.pie, S0.pie, pp)],
-    ['Real rate <var>r̄</var>', pct(st.r), dl(st.r, base.r, pp)], ['Neutral rate <var>r</var><sub>n</sub>', pct(S.rn), dl(S.rn, S0.rn, pp)], ['Nominal <var>i</var> = <var>r̄</var> + <var>π</var><sup>e</sup>', pct(S.i), dl(S.i, S0.i, pp)] ];
+    ['Real rate <var>r</var>', pct(S.r), dl(S.r, S0.r, pp)], ['Neutral rate <var>r</var><sub>n</sub>', pct(S.rn), dl(S.rn, S0.rn, pp)], ['Nominal <var>i</var> = <var>r</var> + <var>π</var><sup>e</sup>', pct(S.i), dl(S.i, S0.i, pp)] ];
   $('kpis').innerHTML = K.map(k => `<div class="kpi"><div class="k">${k[0]}</div><div class="v">${k[1]}</div><div class="f">${k[2]}</div></div>`).join('');
   // algebra
   const gap = S.Y - S.Yn, k = st.alpha/L;
   const eq = (s, cl='') => `<div class="eq ${cl}">${s}</div>`, pr = s => `<p class="prose">${s}</p>`;
   const blk = (l, c, e) => `<div class="blk"><div class="lb">${c ? `<span class="sw" style="background:var(${c})"></span>` : ''}${l}</div><div class="eqs">${e.join('')}</div></div>`;
   $('alg').innerHTML = [
-    blk('IS', '--goods', [eq('<var>Y</var> = <var>A</var> − <var>b</var>(<var>r</var> + <var>x</var>)'), eq(`<span class="n">${S.Y.toFixed(1)} = ${st.A.toFixed(1)} − 250 × (${pct(st.r,2)} + ${pct(st.x,2)})</span>`), pr('Y = C(Y − T) + I(Y, r + x) + G, written in a linear form. A collects G, T and confidence; spending depends on the borrowing rate r + x.')]),
-    blk('LM', '--policy', [eq('<var>r</var> = <var>r̄</var>, &nbsp; <var>i</var> = <var>r̄</var> + <var>π</var><sup>e</sup>'), eq(`<span class="n">i = ${pct(st.r,2)} + ${pct(S.pie,2)} = ${pct(S.i,2)}</span>`), pr('The Fed chooses the real rate. LM is horizontal.')]),
+    blk('IS', '--goods', [eq('<var>Y</var> = <var>A</var> − <var>b</var>(<var>r</var> + <var>x</var>)'), eq(`<span class="n">${S.Y.toFixed(1)} = ${st.A.toFixed(1)} − 250 × (${pct(S.r,2)} + ${pct(st.x,2)})</span>`), pr('Y = C(Y − T) + I(Y, r + x) + G, written in a linear form. A collects G, T and confidence; spending depends on the borrowing rate r + x.')]),
+    blk('LM', '--policy', [eq('<var>r</var> = <var>r̄</var>, &nbsp; <var>i</var> = <var>r</var> + <var>π</var><sup>e</sup> ≥ 0 &nbsp;⇒&nbsp; <var>r</var> ≥ −<var>π</var><sup>e</sup>'), eq(`<span class="n">i = ${pct(S.r,2)} + ${pct(S.pie,2)} = ${S.zlb ? '<span class="c">' + pct(S.i,2) + '</span>' : pct(S.i,2)}</span>`), pr(S.zlb ? `The Fed wants r̄ = ${pct(st.r)}, but the nominal rate cannot go below zero. So r is stuck at −πᵉ = ${pct(S.floor)}. If πᵉ falls, this floor rises.` : 'The Fed chooses the real rate. LM is horizontal. It cannot go below −πᵉ, where i = 0.')]),
     blk('WS-PS', '--wage', [eq('1 − <var>α</var><var>u</var><sub>n</sub> + <var>z</var> = 1/(1 + <var>m</var>)'), eq(`<span class="n">u<sub>n</sub> = (1 + z − 1/(1 + m))/α = <span class="c">${pct(S.un,2)}</span></span>`), eq(`<var>Y</var><sub>n</sub> = <var>L</var>(1 − <var>u</var><sub>n</sub>) <span class="n">= 150 × ${(1 - S.un).toFixed(4)} = ${S.Yn.toFixed(1)}</span>`), pr(`Textbook approximation: uₙ ≈ (m + z)/α = ${pct((st.m + st.z)/st.alpha, 1)}.`)]),
     blk('PC', '--pc', [eq('<var>π</var> − <var>π</var><sup>e</sup> = −<var>α</var>(<var>u</var> − <var>u</var><sub>n</sub>) = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)'),
       eq(st.mode === 'anch' ? '<var>π</var> − <var>π̄</var> = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)' : '<var>π</var> − <var>π</var><sub>−1</sub> = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)', 'strong'),
@@ -438,13 +446,16 @@ function render(){
   const ag = Math.abs(gap) < 0.05;
   const step = (l, s) => `<div class="step"><div class="lb">${l}</div><p>${s}</p></div>`;
   const R = [];
-  R.push(step('1 · Short run', `The Fed sets r̄ = ${pct(st.r)}. At that rate, spending on the IS curve gives output of <b>${S.Y.toFixed(1)}</b>. ${ag ? 'That is exactly natural output.' : `That is ${Math.abs(gap).toFixed(1)} ${gap > 0 ? 'above' : 'below'} natural output, Yₙ = ${S.Yn.toFixed(1)}.`}`));
+  R.push(step('1 · Short run', `${S.zlb ? `The Fed has cut i to zero, so r = −πᵉ = ${pct(S.r)}.` : `The Fed sets r̄ = ${pct(S.r)}.`} At that rate, spending on the IS curve gives output of <b>${S.Y.toFixed(1)}</b>. ${ag ? 'That is exactly natural output.' : `That is ${Math.abs(gap).toFixed(1)} ${gap > 0 ? 'above' : 'below'} natural output, Yₙ = ${S.Yn.toFixed(1)}.`}`));
   R.push(step('2 · Labor market', ag ? `Unemployment equals the natural rate, ${pct(S.un)}. The wages workers bargain for match what firms' prices allow, so nobody is surprised.`
     : `More output needs more workers, so unemployment is ${pct(S.u)}, ${gap > 0 ? 'below' : 'above'} the natural rate of ${pct(S.un)}. Workers ${gap > 0 ? 'bargain harder and nominal wages rise faster' : 'bargain less and nominal wages rise more slowly'} than expected. Firms pass that on through prices.`));
   R.push(step('3 · Inflation', ag ? `Inflation equals expected inflation, <b>${pct(S.pi)}</b>.` : `So inflation comes in at <b>${pct(S.pi)}</b>, ${pp(Math.abs(S.pi - S.pie)).replace('+','')} ${gap > 0 ? 'above' : 'below'} the ${pct(S.pie)} people expected${st.mode === 'anch' ? ' (the target)' : ' (last year\'s inflation)'}.`));
   let nx;
+  const spiral = S.zlb && st.mode === 'dean' && gap < 0;
   const dean = st.mode === 'dean';
-  if (ag && near(S.pie, st.pibar, 1e-4)) nx = `This is a medium-run equilibrium: Y = Yₙ, π = πᵉ = π̄ = ${pct(st.pibar)}, r̄ = rₙ = ${pct(S.rn)}, i = ${pct(S.i)}. Nothing pushes the economy to move.`;
+  if (spiral) nx = `The Fed is at the zero lower bound and cannot cut further. Inflation comes in at ${pct(S.pi)}, so next year people expect ${pct(S.pi)}. The floor −πᵉ rises to ${pct(-S.pi)}, the real rate goes <b>up</b>, and output falls further. Each year makes the next worse: the <b>deflation spiral</b> (press "Next year").`;
+  else if (S.zlb) nx = `The Fed is at the zero lower bound. With anchored expectations the floor stays at −π̄ = ${pct(S.floor)}, so the economy is stuck below Yₙ with low inflation, but it does not spiral. Getting out needs a shift of IS, such as a fiscal expansion.`;
+  else if (ag && near(S.pie, st.pibar, 1e-4)) nx = `This is a medium-run equilibrium: Y = Yₙ, π = πᵉ = π̄ = ${pct(st.pibar)}, r̄ = rₙ = ${pct(S.rn)}, i = ${pct(S.i)}. Nothing pushes the economy to move.`;
   else if (ag) nx = `Output is at Yₙ, so inflation stays at last year's ${pct(S.pi)}. That is ${S.pi > st.pibar ? 'above' : 'below'} the ${pct(st.pibar)} target. To bring it back, the Fed would have to hold output ${S.pi > st.pibar ? 'below' : 'above'} Yₙ for a while.`;
   else if (gap > 0) nx = dean ? `With de-anchored expectations, next year people expect ${pct(S.pi)}, so inflation rises again, and keeps rising every year output stays above Yₙ (press "Next year"). The Fed has to raise r̄ to rₙ = ${pct(S.rn)} to stop it.`
     : `With anchored expectations, inflation stays above target for as long as output stays above Yₙ, but it does not keep rising. To return to the medium run, the Fed raises r̄ to rₙ = ${pct(S.rn)}.`;
