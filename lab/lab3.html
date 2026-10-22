@@ -76,7 +76,7 @@ button.act{ text-align:left; font-size:12.5px; }
 .c-pc button.act{ border-color:var(--pc); color:var(--pc); background:var(--panel); }
 .seg{ display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
 .seg button{ border:none; border-radius:0; background:var(--panel); padding:7px 6px; color:var(--mut); display:flex; flex-direction:column; align-items:center; gap:0; line-height:1.25; }
-.seg button span{ font-family:var(--f-mono); font-size:11px; opacity:.85; }
+.seg button span{ font-family:var(--f-mono); font-size:11px; opacity:.85; margin-top:4px; }
 .seg button[aria-pressed="true"]{ background:var(--pc); color:#fff; }
 .scen{ display:flex; flex-direction:column; gap:6px; }
 .scen .sh{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:4px; }
@@ -152,6 +152,7 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
 .result{ border-radius:9px; padding:12px 14px; background:var(--ink); color:var(--panel); margin-top:12px; }
 .result .lb{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; }
 .result p{ margin:4px 0 0; font-size:14px; }
+.ob{ display:inline-block; line-height:1; border-top:0.07em solid currentColor; padding-top:0.06em; }
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
 
@@ -471,6 +472,25 @@ function render(){
   $('read').innerHTML = R.join('') + `<div class="result"><div class="lb">The connection</div><p>Demand and the Fed decide Y. The labor market decides Yₙ. The Phillips curve turns the gap between them into inflation surprises, and expectations decide whether those surprises fade or build up.</p></div>`;
 }
 // open on a short-run equilibrium with output above potential
+// combining macrons (π̄, r̄) sit off-centre in most fonts: draw the bar as an overline instead
+function fixBars(root){
+  const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), hits = [];
+  while (tw.nextNode()) if (tw.currentNode.nodeValue.indexOf('\u0304') >= 0) hits.push(tw.currentNode);
+  hits.forEach(n => {
+    const inSvg = !!n.parentNode.closest('svg'), frag = document.createDocumentFragment();
+    n.nodeValue.split(/(.\u0304)/).forEach(part => {
+      if (!part) return;
+      if (part.length === 2 && part[1] === '\u0304'){
+        const e = inSvg ? document.createElementNS(NS, 'tspan') : document.createElement('span');
+        if (inSvg) e.setAttribute('text-decoration', 'overline'); else e.className = 'ob';
+        e.textContent = part[0]; frag.appendChild(e);
+      } else frag.appendChild(document.createTextNode(part));
+    });
+    n.parentNode.replaceChild(frag, n);
+  });
+}
+const render0 = render;
+render = function(){ render0(); fixBars(document.body); };
 render();
 })();
 </script>
