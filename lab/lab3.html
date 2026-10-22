@@ -123,12 +123,14 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
 @media (max-width:1000px){ .kpis{ grid-template-columns:repeat(4, minmax(0,1fr)); } .kpi{ border-bottom:1px solid var(--rule); } }
 @media (max-width:520px){ .kpis{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
 
-.lower{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
-@media (max-width:1040px){ .lower{ grid-template-columns:1fr; } }
+.main{ display:flex; flex-direction:column; gap:20px; min-width:0; }
+.lower{ display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; align-items:start; }
+@media (max-width:1240px){ .lower{ grid-template-columns:1fr; } }
+@media (max-width:1040px){ .main{ display:contents; } .figcard{ order:1; } .lower{ order:3; } }
 .lower > .card{ padding:18px 20px; }
 .lower h3{ font-family:var(--f-display); font-weight:400; font-size:28px; line-height:1.1; margin:0 0 4px; }
 .lower .sub{ margin:0 0 14px; color:var(--mut); font-size:13.5px; }
-.blk{ display:grid; grid-template-columns:120px minmax(0,1fr); gap:4px 16px; padding:11px 0; border-top:1px solid var(--rule); }
+.blk{ display:grid; grid-template-columns:96px minmax(0,1fr); gap:4px 16px; padding:11px 0; border-top:1px solid var(--rule); }
 .blk:first-child{ border-top:none; padding-top:0; }
 .blk .lb{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--mut); padding-top:5px; }
 .blk .lb .sw{ display:block; width:18px; height:3px; margin-bottom:6px; border-radius:2px; }
@@ -142,9 +144,9 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
 .prose{ font-size:13.5px; color:var(--mut); margin:2px 0 4px; }
 @media (max-width:560px){ .blk{ grid-template-columns:1fr; } }
 .read{ display:flex; flex-direction:column; gap:0; }
-.step{ display:grid; grid-template-columns:120px minmax(0,1fr); gap:4px 16px; padding:11px 0; border-top:1px solid var(--rule); }
+.step{ display:grid; grid-template-columns:136px minmax(0,1fr); gap:4px 16px; padding:11px 0; border-top:1px solid var(--rule); }
 .step:first-child{ border-top:none; padding-top:0; }
-.step .lb{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--mut); padding-top:3px; }
+.step .lb{ white-space:nowrap; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--mut); padding-top:3px; }
 .step p{ margin:0; font-size:14.5px; max-width:66ch; }
 @media (max-width:560px){ .step{ grid-template-columns:1fr; } }
 .result{ border-radius:9px; padding:12px 14px; background:var(--ink); color:var(--panel); margin-top:12px; }
@@ -184,6 +186,7 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
       <div class="grp"><h2>Scenarios</h2><div class="scen" id="scen"></div></div>
     </aside>
 
+    <div class="main">
     <div class="card figcard">
       <div class="lesson" id="lesson" hidden></div>
       <div class="chips" id="chips" aria-live="polite"></div>
@@ -196,11 +199,11 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
       </div>
       <div class="kpis" id="kpis"></div>
     </div>
-  </section>
-
-  <section class="lower">
-    <div class="card"><h3>The algebra</h3><p class="sub">Live numbers. L = 150, b = 250.</p><div id="alg"></div></div>
-    <div class="card"><h3>The intuition</h3><p class="sub">What the diagram is saying right now.</p><div class="read" id="read"></div></div>
+    <div class="lower">
+      <div class="card"><h3>The algebra</h3><p class="sub">Live numbers. L = 150, b = 250.</p><div id="alg"></div></div>
+      <div class="card"><h3>The intuition</h3><p class="sub">What the diagram is saying right now.</p><div class="read" id="read"></div></div>
+    </div>
+    </div>
   </section>
 </div>
 
