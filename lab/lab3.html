@@ -209,10 +209,12 @@ svg.fig .ttl{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.13em;
 "use strict";
 const L = 150, B = 250;
 const DEF = { A:150.2, x:0.01, r:0.02, pibar:0.02, pilag:0.02, mode:'anch', m:0.025, z:0, alpha:0.5 };
-const unOf = s => Math.max(0, Math.min(0.6, (1 + s.z - 1/(1 + s.m)) / s.alpha));
+const unOf = s => Math.max(0, Math.min(0.6, (s.m + s.z) / s.alpha));   // textbook approximation: uₙ ≈ (m + z)/α
 DEF.A = L*(1 - unOf(DEF)) + B*(DEF.r + DEF.x);   // start in the medium run: r̄ = rₙ = 2%            // start in the medium run
-const st = Object.assign({}, DEF);
-let base = Object.assign({}, DEF);
+// opening view: a short-run equilibrium with output above potential (scenarios still start from the medium run, DEF)
+const START = Object.assign({}, DEF, {A: DEF.A + 3});
+const st = Object.assign({}, START);
+let base = Object.assign({}, START);
 let scenOn = null;
 
 /* ---------- model ---------- */
@@ -224,7 +226,7 @@ function solve(s){
   const u = 1 - Y/L;
   const pi = pie + (s.alpha/L)*(Y - Yn);                   // = πᵉ − α(u − uₙ)
   const rn = (s.A - Yn)/B - s.x;
-  return {un, Yn, Y, u, pi, pie, rn, r, floor, zlb, i: r + pie, wr: 1/(1 + s.m)};
+  return {un, Yn, Y, u, pi, pie, rn, r, floor, zlb, i: r + pie, wr: 1 - s.m};   // PS: W/P = 1/(1 + m) ≈ 1 − m
 }
 
 /* ---------- helpers ---------- */
@@ -323,7 +325,7 @@ $('nextYr').addEventListener('click', () => { base = Object.assign({}, st); st.p
 $('mAnch').addEventListener('click', () => { st.mode = 'anch'; base.mode = 'anch'; render(); });
 $('mDean').addEventListener('click', () => { st.mode = 'dean'; base.mode = 'dean'; render(); });
 $('rebase').addEventListener('click', () => { base = Object.assign({}, st); scenOn = null; render(); });
-$('reset').addEventListener('click', () => { Object.assign(st, DEF); base = Object.assign({}, DEF); scenOn = null; render(); });
+$('reset').addEventListener('click', () => { Object.assign(st, START); base = Object.assign({}, START); scenOn = null; render(); });
 
 /* ---------- drawing ---------- */
 function drawMain(S, S0){
@@ -419,7 +421,9 @@ function render(){
   if (!near(S.un, S0.un)) c.push(['shift', `<b>uₙ</b> ${pct(S0.un)} → ${pct(S.un)} · Yₙ and PC move`]);
   if (!near(S.Y, S0.Y, 1e-4)) c.push(['along', `Y ${S0.Y.toFixed(1)} → <b>${S.Y.toFixed(1)}</b>`]);
   if (S.zlb) c.push(['warnc', `<b>Zero lower bound:</b> the Fed wants r̄ = ${pct(st.r)}, but with i = 0 the lowest real rate is −πᵉ = ${pct(S.floor)}`]);
-  if (!c.length) c.push(['', 'Medium run. Pick a scenario or move a slider; dashed lines keep the starting point.']);
+  if (!c.length){ const g0 = S.Y - S.Yn;
+    c.push(['', Math.abs(g0) < 0.05 ? 'Medium run. Pick a scenario or move a slider; dashed lines keep the starting point.'
+      : `<b>Short-run equilibrium:</b> output is ${Math.abs(g0).toFixed(1)} ${g0 > 0 ? 'above' : 'below'} potential, so inflation is ${g0 > 0 ? 'above' : 'below'} expected inflation. Try the Fed button, Next year, or a scenario.`]); }
   $('chips').innerHTML = c.map(x => `<span class="chip ${x[0]}">${x[1]}</span>`).join('');
   // kpis
   const dl = (v, v0, f) => near(v, v0, 1e-6) ? '' : `<b>${f(v - v0)}</b>`;
@@ -435,7 +439,7 @@ function render(){
   $('alg').innerHTML = [
     blk('IS', '--goods', [eq('<var>Y</var> = <var>A</var> − <var>b</var>(<var>r</var> + <var>x</var>)'), eq(`<span class="n">${S.Y.toFixed(1)} = ${st.A.toFixed(1)} − 250 × (${pct(S.r,2)} + ${pct(st.x,2)})</span>`), pr('Y = C(Y − T) + I(Y, r + x) + G, written in a linear form. A collects G, T and confidence; spending depends on the borrowing rate r + x.')]),
     blk('LM', '--policy', [eq('<var>r</var> = <var>r̄</var>, &nbsp; <var>i</var> = <var>r</var> + <var>π</var><sup>e</sup> ≥ 0 &nbsp;⇒&nbsp; <var>r</var> ≥ −<var>π</var><sup>e</sup>'), eq(`<span class="n">i = ${pct(S.r,2)} + ${pct(S.pie,2)} = ${S.zlb ? '<span class="c">' + pct(S.i,2) + '</span>' : pct(S.i,2)}</span>`), pr(S.zlb ? `The Fed wants r̄ = ${pct(st.r)}, but the nominal rate cannot go below zero. So r is stuck at −πᵉ = ${pct(S.floor)}. If πᵉ falls, this floor rises.` : 'The Fed chooses the real rate. LM is horizontal. It cannot go below −πᵉ, where i = 0.')]),
-    blk('WS-PS', '--wage', [eq('1 − <var>α</var><var>u</var><sub>n</sub> + <var>z</var> = 1/(1 + <var>m</var>)'), eq(`<span class="n">u<sub>n</sub> = (1 + z − 1/(1 + m))/α = <span class="c">${pct(S.un,2)}</span></span>`), eq(`<var>Y</var><sub>n</sub> = <var>L</var>(1 − <var>u</var><sub>n</sub>) <span class="n">= 150 × ${(1 - S.un).toFixed(4)} = ${S.Yn.toFixed(1)}</span>`), pr(`Textbook approximation: uₙ ≈ (m + z)/α = ${pct((st.m + st.z)/st.alpha, 1)}.`)]),
+    blk('WS-PS', '--wage', [eq('WS: <var>W</var>/<var>P</var> = 1 − <var>α</var><var>u</var> + <var>z</var> &nbsp;·&nbsp; PS: <var>W</var>/<var>P</var> = 1/(1 + <var>m</var>) ≈ 1 − <var>m</var>'), eq(`<var>u</var><sub>n</sub> = (<var>m</var> + <var>z</var>)/<var>α</var> <span class="n">= (${pct(st.m,1)} + ${pct(st.z,1)})/${st.alpha.toFixed(2)} = <span class="c">${pct(S.un,1)}</span></span>`), eq(`<var>Y</var><sub>n</sub> = <var>L</var>(1 − <var>u</var><sub>n</sub>) <span class="n">= 150 × ${(1 - S.un).toFixed(4)} = ${S.Yn.toFixed(1)}</span>`)]),
     blk('PC', '--pc', [eq('<var>π</var> − <var>π</var><sup>e</sup> = −<var>α</var>(<var>u</var> − <var>u</var><sub>n</sub>) = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)'),
       eq(st.mode === 'anch' ? '<var>π</var> − <var>π̄</var> = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)' : '<var>π</var> − <var>π</var><sub>−1</sub> = (<var>α</var>/<var>L</var>)(<var>Y</var> − <var>Y</var><sub>n</sub>)', 'strong'),
       eq(`<span class="n">${pct(S.pi,2)} − ${pct(S.pie,2)} = ${k.toFixed(5)} × (${sgn(gap)})</span>`),
@@ -463,7 +467,7 @@ function render(){
   R.push(step('4 · What next', nx));
   $('read').innerHTML = R.join('') + `<div class="result"><div class="lb">The connection</div><p>Demand and the Fed decide Y. The labor market decides Yₙ. The Phillips curve turns the gap between them into inflation surprises, and expectations decide whether those surprises fade or build up.</p></div>`;
 }
-// open on the fiscal-expansion scenario so the first view shows a gap
-SC[1].btn.click();
+// open on a short-run equilibrium with output above potential
+render();
 })();
 </script>
