@@ -1,0 +1,379 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Solow Growth Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a short intro, then one bench with two diagrams side by side (Solow diagram | Y/N over time) driven by one set of scenario buttons.
+   Colour code matches the course diagrams: f = blue, sf = green, required investment = purple, shocks / current position = red. */
+:root{
+  --bg:#F3F6F7; --surface:#FFFFFF; --sunk:#E8EEF0; --ink:#15212A; --mut:#53616B; --faint:#8A98A1; --rule:#D7E0E4;
+  --acc:#0D6170; --acc-soft:#DCECEE;
+  --f:#2C66AE; --sf:#45762A; --br:#7250A5; --shock:#C03A2D; --base:#8A98A1; --path:#0D6170;
+  --display:'Newsreader', Georgia, 'Times New Roman', serif;
+  --body:'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1418; --surface:#152027; --sunk:#1B2830; --ink:#E3EAED; --mut:#9DABB3; --faint:#6D7C85; --rule:#29363F;
+  --acc:#5BBFCE; --acc-soft:#163339;
+  --f:#7AAAEC; --sf:#94C46F; --br:#B394E6; --shock:#F07B69; --base:#6D7C85; --path:#5BBFCE; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --surface:#152027; --sunk:#1B2830; --ink:#E3EAED; --mut:#9DABB3; --faint:#6D7C85; --rule:#29363F;
+  --acc:#5BBFCE; --acc-soft:#163339;
+  --f:#7AAAEC; --sf:#94C46F; --br:#B394E6; --shock:#F07B69; --base:#6D7C85; --path:#5BBFCE; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:17px; line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));}
+.page{max-width:1160px; margin:0 auto; padding-block:36px 64px; display:flex; flex-direction:column; gap:28px}
+h1,h2,h3{font-family:var(--display); font-weight:600; text-wrap:balance; line-height:1.15; margin:0}
+h1{font-size:clamp(34px,5.5vw,52px)}
+h3{font-size:22px}
+p{margin:0}
+.kicker{font-family:var(--mono); font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--acc); font-weight:600}
+.intro{max-width:70ch; display:flex; flex-direction:column; gap:14px}
+.eq{display:flex; flex-wrap:wrap; align-items:center; gap:10px 28px; background:var(--surface); border:1px solid var(--rule); border-left:4px solid var(--acc); border-radius:4px 10px 10px 4px; padding:12px 20px; font-size:18px; max-width:70ch; overflow-x:auto}
+.eq .cap{font-size:15px; color:var(--mut)}
+mjx-container{color:var(--ink)}
+
+.bench{background:var(--surface); border:1px solid var(--rule); border-radius:14px; padding:22px; display:flex; flex-direction:column; gap:18px}
+.presets{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.presets .lbl{font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-right:4px}
+button{font:inherit; cursor:pointer}
+.chip{font-size:15px; padding:7px 14px; border-radius:999px; border:1px solid var(--rule); background:var(--sunk); color:var(--ink)}
+.chip:hover{border-color:var(--acc)}
+.chip[aria-pressed="true"]{background:var(--acc); color:var(--surface); border-color:var(--acc)}
+.sep{width:1px; height:24px; background:var(--rule); margin:0 4px}
+.figs{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px}
+.fig{background:var(--bg); border:1px solid var(--rule); border-radius:10px; padding:12px 12px 8px; min-width:0; display:flex; flex-direction:column; gap:6px}
+.fig h3{font-family:var(--body); font-size:14px; font-weight:600; color:var(--mut)}
+svg.chart{display:block; width:100%; height:auto; overflow:visible}
+svg.chart text{font-family:var(--mono); font-size:12.5px; fill:var(--mut)}
+svg.chart .axis{stroke:var(--faint); stroke-width:1.2; fill:none}
+svg.chart .grid{stroke:var(--rule); stroke-width:1; fill:none}
+svg.chart .lbl{font-family:var(--display); font-style:italic; font-size:17px; fill:var(--ink)}
+.ln{fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round}
+.thin{stroke-width:1.5}
+.dash{stroke-dasharray:6 5}
+.dot{stroke-dasharray:2 4}
+.fade{opacity:.55}
+.legend{display:flex; flex-wrap:wrap; gap:4px 16px; font-size:13.5px; color:var(--mut)}
+.legend span::before{content:""; display:inline-block; width:18px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px; background:var(--c)}
+.legend span.dsh::before{background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 9px)}
+.playbar{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+.btn{font-size:15px; font-weight:600; padding:8px 16px; border-radius:8px; border:1px solid var(--acc); background:var(--acc); color:var(--surface)}
+.yr{font-family:var(--mono); font-size:14px; color:var(--mut); min-width:9ch; font-variant-numeric:tabular-nums}
+.playbar input{flex:1; min-width:140px; accent-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.explain{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px}
+.explain .box{background:var(--acc-soft); border-radius:10px; padding:14px 18px; display:flex; flex-direction:column; gap:6px}
+.btn.ghost{background:transparent; color:var(--acc)}
+.y0{min-height:46px; display:flex; align-items:flex-start; line-height:1.45; gap:12px; padding:10px 16px; border-radius:10px; border:1.5px dashed var(--rule); background:var(--bg); font-size:16px; color:var(--mut)}
+.y0.on{border:1.5px solid var(--shock); background:color-mix(in srgb, var(--shock) 9%, var(--surface)); color:var(--ink)}
+.y0 b{padding-top:2px; font-family:var(--mono); color:var(--shock); font-size:13px; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap}
+table.snap{width:100%; border-collapse:collapse; font-size:14.5px; font-variant-numeric:tabular-nums; margin-top:6px}
+table.snap th, table.snap td{padding:6px 8px; border-bottom:1px solid color-mix(in srgb, var(--acc) 22%, transparent); text-align:right}
+table.snap th:first-child, table.snap td:first-child{text-align:left}
+table.snap thead th{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--mut); font-weight:500; vertical-align:bottom}
+table.snap td.jump{color:var(--shock); font-weight:700}
+table.snap td.same{color:var(--ink); font-weight:600}
+.snapnote{font-size:15px; margin-top:6px}
+.explain h4{margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--acc); font-weight:600}
+.explain ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px}
+.headline{font-family:var(--display); font-size:21px; line-height:1.35}
+.nums{display:flex; flex-wrap:wrap; gap:8px 22px; font-family:var(--mono); font-size:13.5px; color:var(--mut); font-variant-numeric:tabular-nums}
+.nums b{color:var(--ink); font-weight:600}
+footer{font-size:13.5px; color:var(--faint)}
+@media (max-width:860px){ .figs, .explain{grid-template-columns:minmax(0,1fr)} .sep{display:none} }
+@media (max-width:520px){ body{font-size:16px} .bench{padding:14px} }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <div class="kicker">ECON 3204 · Solow model with technological progress</div>
+    <h1>Steady state, and what moves it</h1>
+    <p>In steady state, output per effective worker \(Y/AN\) is constant. That does <b>not</b> mean living standards stand still. Output per worker is technology times output per effective worker, so it grows at the rate of technological progress:</p>
+  </header>
+  <div class="eq">
+    <span>\( \dfrac{Y}{N} = A \times \dfrac{Y}{AN} \quad\Rightarrow\quad g_{Y/N} = g_A + g_{Y/AN} \)</span>
+    <span class="cap">Constant \(Y/AN\) ⇒ \(Y/N\) grows at \(g_A\). On a log scale that is a straight line with slope \(g_A\).</span>
+  </div>
+
+  <section class="bench" aria-label="Solow diagram and output per worker">
+    <div class="presets" role="group" aria-label="Scenario">
+      <span class="lbl">Show</span>
+      <button class="chip" data-sc="steady" aria-pressed="true">Steady state</button>
+      <span class="sep"></span>
+      <button class="chip" data-sc="gNup">g<sub>N</sub> rises</button>
+      <button class="chip" data-sc="gNdown">g<sub>N</sub> falls</button>
+      <span class="sep"></span>
+      <button class="chip" data-sc="gAup">g<sub>A</sub> rises</button>
+      <button class="chip" data-sc="gAdown">g<sub>A</sub> falls</button>
+      <span class="sep"></span>
+      <button class="chip" data-sc="kloss">Capital lost (−20%)</button>
+      <button class="chip" data-sc="kgain">Capital gained (+20%)</button>
+    </div>
+
+    <div class="figs">
+      <div class="fig">
+        <h3>Solow diagram (per effective worker)</h3>
+        <svg class="chart" id="solow" viewBox="0 0 560 420" role="img" aria-label="Solow diagram"></svg>
+        <div class="legend">
+          <span style="--c:var(--f)">f(K/AN)</span><span style="--c:var(--sf)">s·f(K/AN)</span><span style="--c:var(--br)">(δ+g<sub>A</sub>+g<sub>N</sub>)K/AN</span><span class="dsh" style="--c:var(--base)">before the change</span>
+        </div>
+      </div>
+      <div class="fig">
+        <h3>Output per worker over time (log scale)</h3>
+        <svg class="chart" id="time" viewBox="0 0 560 420" role="img" aria-label="Output per worker over time on a log scale"></svg>
+        <div class="legend">
+          <span style="--c:var(--path)">Y/N</span><span class="dsh" style="--c:var(--base)">path with no change</span><span style="--c:var(--shock)">now</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="y0" id="y0" aria-live="polite"><b>Year 0</b><span id="y0t"></span></div>
+
+    <div class="playbar">
+      <button class="btn" id="play" type="button">▶ Play</button>
+      <button class="btn ghost" id="go0" type="button">Go to year 0</button>
+      <button class="btn ghost" id="reset" type="button">↺ Reset</button>
+      <label class="yr" id="yr" for="scrub">Year 80</label>
+      <input type="range" id="scrub" min="-20" max="80" step="0.5" value="80" aria-label="Year">
+    </div>
+
+    <div class="explain">
+      <div class="box"><h4>The change</h4><p class="headline" id="hd"></p><div class="nums" id="nums"></div>
+        <table class="snap" aria-label="Values around year 0"><thead><tr><th></th><th>Year 0,<br>just before</th><th>Year 0,<br>just after</th><th id="nowh">Year 80</th></tr></thead><tbody id="snap"></tbody></table>
+        <p class="snapnote" id="snapnote"></p></div>
+      <div class="box"><h4>What the two diagrams show</h4><ul id="pts"></ul></div>
+    </div>
+  </section>
+
+  <footer>Model: \(Y=\sqrt{K}\sqrt{AN}\), s = 30%, δ = 5%, g<sub>N</sub> = 3%, g<sub>A</sub> = 2% before any change, so K/AN* = 9 and Y/AN* = 3. Changes happen at year 0. Blanchard, <i>Macroeconomics</i> 8e, Ch. 12.</footer>
+</div>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']]},svg:{fontCache:'local'}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const DEF={s:.30,d:.05,gN:.03,gA:.02};
+const T0=-20,T1=80,DT=0.05;
+const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const f=k=>Math.sqrt(Math.max(k,0));
+const n=p=>p.d+p.gA+p.gN;
+const ks=p=>Math.pow(p.s/n(p),2);
+const pc=(x,dp=0)=>(x*100).toFixed(dp)+'%';
+const f2=x=>x.toFixed(2);
+function el(t,a,p,txt){const e=document.createElementNS(NS,t); if(a) for(const k in a) e.setAttribute(k,a[k]); if(txt!=null) e.textContent=txt; if(p) p.appendChild(e); return e;}
+function D(pts){let s=''; pts.forEach(p=>{ if(isFinite(p[0])&&isFinite(p[1])) s+=(s?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1); }); return s;}
+
+const SC={
+  steady:{name:'No change: the economy stays in steady state', next:{}},
+  gNup:{name:'Population growth rises from 3% to 5%', next:{gN:.05}},
+  gNdown:{name:'Population growth falls from 3% to 1%', next:{gN:.01}},
+  gAup:{name:'Technological progress rises from 2% to 4%', next:{gA:.04}},
+  gAdown:{name:'Technological progress falls from 2% to 1%', next:{gA:.01}},
+  kloss:{name:'20% of the capital stock is destroyed (war, earthquake)', next:{}, kmul:0.8},
+  kgain:{name:'The capital stock rises 20% overnight (e.g. a large aid or investment inflow)', next:{}, kmul:1.2}
+};
+const st={sc:'steady',P0:{...DEF},P1:{...DEF},kmul:1,sim:[],t:T1,raf:0,playing:false};
+
+function simulate(){
+  const {P0,P1,kmul}=st, k0=ks(P0), y0=f(k0), out=[];
+  for(let t=T0;t<0;t+=0.5) out.push({t,k:k0,yn:Math.exp(P0.gA*t)*y0,b:Math.exp(P0.gA*t)*y0});
+  let k=k0*kmul, A=1, i=0; const nn=n(P1);
+  for(let t=0;t<=T1+1e-9;t+=DT){
+    if(i%10===0) out.push({t:+t.toFixed(2),k,yn:A*f(k),b:Math.exp(P0.gA*t)*y0});
+    k+=(P1.s*f(k)-nn*k)*DT; A*=Math.exp(P1.gA*DT); i++;
+  }
+  st.sim=out;
+}
+const at=t=>{const i=st.sim.findIndex(r=>r.t>=t-1e-9); return st.sim[i<0?st.sim.length-1:i];};
+
+function drawSolow(t){
+  const svg=document.getElementById('solow'); svg.textContent='';
+  const W=560,H=420,m={l:52,r:120,t:50,b:44};
+  const k0=ks(st.P0), k1=ks(st.P1), kmax=Math.max(k0,k1,k0*st.kmul)*1.55, ymax=f(kmax)*1.1;
+  const X=v=>m.l+v/kmax*(W-m.l-m.r), Y=v=>H-m.b-v/ymax*(H-m.t-m.b);
+  const g=el('g',null,svg);
+  el('path',{d:`M${m.l} ${m.t}V${H-m.b}H${W-m.r}`,class:'axis'},g);
+  const pf=[],ps=[]; for(let i=0;i<=140;i++){const k=kmax*i/140; pf.push([X(k),Y(f(k))]); ps.push([X(k),Y(st.P1.s*f(k))]);}
+  el('path',{d:D(pf),class:'ln',stroke:'var(--f)'},g);
+  el('path',{d:D(ps),class:'ln',stroke:'var(--sf)'},g);
+  const U = t<0 ? 0 : (st.hold ? st.u : 1);
+  const n0=n(st.P0), n1=n(st.P1), changed=Math.abs(n0-n1)>1e-9;
+  const nu=n0+(n1-n0)*U, ku=Math.pow(st.P1.s/nu,2);
+  const end=nn=>{const ke=Math.min(kmax,ymax*.95/nn); return [X(ke),Y(nn*ke)];};
+  const e0=end(n0), eu=end(nu);
+  if(changed && U>0){ el('path',{d:`M${X(0)} ${Y(0)}L${e0[0]} ${e0[1]}`,class:'ln thin dash fade',stroke:'var(--br)'},g); el('text',{x:e0[0]+6,y:e0[1]+(n0<n1?14:-4),class:'lbl',style:'fill:var(--base)'},g,'old line'); }
+  el('path',{d:`M${X(0)} ${Y(0)}L${eu[0]} ${eu[1]}`,class:'ln',stroke:'var(--br)','stroke-width':(st.hold&&U<1&&changed)?4:2.6},g);
+  el('text',{x:X(kmax)+6,y:Y(f(kmax))+5,class:'lbl',style:'fill:var(--f)'},g,'f(K/AN)');
+  el('text',{x:X(kmax)+6,y:Y(st.P1.s*f(kmax))+5,class:'lbl',style:'fill:var(--sf)'},g,'s·f(K/AN)');
+  el('text',{x:eu[0]+6,y:eu[1]+(changed&&n1<n0&&U>0?14:-4),class:'lbl',style:'fill:var(--br)'},g,'(δ+gA+gN)K/AN');
+  const ss=(k,col,label,dy)=>{ el('path',{d:`M${X(k)} ${Y(0)}V${Y(f(k))}H${X(0)}`,class:'ln thin dot',stroke:col},g);
+    el('text',{x:X(k),y:H-m.b+16+dy,'text-anchor':'middle',style:`fill:${col}`},g,label); };
+  if(changed && U>0){ ss(k0,'var(--base)','old K/AN* = '+f2(k0),16); ss(ku,'var(--ink)',(U<1?'K/AN* → ':'new K/AN* = ')+f2(ku),0); }
+  else ss(k0,'var(--ink)','K/AN* = '+f2(k0),0);
+  const kj=k0*(1+(st.kmul-1)*U);
+  if(st.kmul!==1 && U>0){ el('path',{d:`M${X(k0)} ${Y(0)+0}H${X(kj)}`,stroke:'var(--shock)','stroke-width':3,opacity:.7},g); el('text',{x:X(k0*st.kmul),y:H-m.b+32,'text-anchor':'middle',style:'fill:var(--shock)'},g,'year 0: '+f2(k0*st.kmul)); }
+  // current position
+  const k = t<0 ? k0 : (st.hold ? (st.kmul!==1 ? kj : k0) : at(t).k);
+  const sv=st.P1.s*f(k), ri=nu*k;
+  if(t>=0 && Math.abs(sv-ri)>1e-3) el('path',{d:`M${X(k)} ${Y(Math.min(sv,ri))}V${Y(Math.max(sv,ri))}`,stroke:sv>ri?'var(--sf)':'var(--shock)','stroke-width':7,opacity:.5},g);
+  el('path',{d:`M${X(k)} ${Y(0)}V${Y(f(k))}`,class:'ln thin',stroke:'var(--shock)'},g);
+  el('circle',{cx:X(k),cy:Y(f(k)),r:5.5,fill:'var(--shock)'},g);
+  el('circle',{cx:X(k),cy:Y(0),r:5.5,fill:'var(--shock)'},g);
+  let msg = t<0 || Math.abs(sv-ri)<1e-2*sv ? 'saving = required investment → K/AN constant' : sv>ri ? 'saving > required investment → K/AN rising' : 'saving < required investment → K/AN falling';
+  if(st.hold && U<1) msg = changed ? 'year 0: the line rotates; the economy has not moved yet' : 'year 0: capital jumps; no curve moves';
+  el('text',{x:m.l-40,y:14,style:'fill:var(--shock);font-weight:600'},g,`Year ${t.toFixed(0)}: K/AN = ${f2(k)}, Y/AN = ${f2(f(k))}`);
+  el('text',{x:m.l-40,y:32},g,msg);
+  el('text',{x:m.l-8,y:m.t+4,'text-anchor':'end',class:'lbl'},g,'Y/AN');
+  el('text',{x:W-m.r,y:H-m.b+16,'text-anchor':'end',class:'lbl'},g,'K/AN');
+}
+
+function drawTime(t){
+  const svg=document.getElementById('time'); svg.textContent='';
+  const W=560,H=420,m={l:52,r:56,t:50,b:44};
+  let lo=Infinity,hi=-Infinity; st.sim.forEach(r=>{lo=Math.min(lo,r.yn,r.b); hi=Math.max(hi,r.yn,r.b);});
+  lo*=0.9; hi*=1.12;
+  const X=v=>m.l+(v-T0)/(T1-T0)*(W-m.l-m.r), L=Math.log, Y=v=>H-m.b-(L(v)-L(lo))/(L(hi)-L(lo))*(H-m.t-m.b);
+  const g=el('g',null,svg);
+  let ticks=[1,1.5,2,3,4,5,7,10,15,20,30,50,70,100].filter(v=>v>=lo&&v<=hi); if(ticks.length>7) ticks=ticks.filter((v,i)=>i%2===0);
+  ticks.forEach(v=>{ el('line',{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),class:'grid'},g); el('text',{x:m.l-6,y:Y(v)+4,'text-anchor':'end'},g,v); });
+  [-20,0,20,40,60,80].forEach(v=>el('text',{x:X(v),y:H-m.b+16,'text-anchor':'middle'},g,v));
+  el('path',{d:`M${m.l} ${m.t}V${H-m.b}H${W-m.r}`,class:'axis'},g);
+  const hl=st.sc!=='steady' && (st.hold || Math.abs(t)<0.01);
+  el('line',{x1:X(0),x2:X(0),y1:m.t,y2:H-m.b,stroke:'var(--shock)','stroke-width':hl?2.5:1.2,'stroke-dasharray':'4 3',opacity:hl?0.9:0.45},g);
+  el('text',{x:X(0)+5,y:H-m.b-6,style:'fill:var(--shock);font-weight:600'},g,'year 0');
+  el('text',{x:W-m.r,y:H-6,'text-anchor':'end'},g,'year');
+  el('text',{x:m.l-8,y:m.t+4,'text-anchor':'end',class:'lbl'},g,'Y/N');
+  const changed=st.sc!=='steady';
+  if(changed) el('path',{d:D(st.sim.map(r=>[X(r.t),Y(r.b)])),class:'ln thin dash',stroke:'var(--base)'},g);
+  let shown=st.sim.filter(r=>r.t<=t+1e-9);
+  const U2 = t<0 ? 0 : (st.hold ? st.u : 1), Y00=f(ks(st.P0));
+  if(U2<1 && shown.length && t>=0){ shown=shown.slice(); const L0=shown[shown.length-1]; shown[shown.length-1]={...L0,yn:Y00+(L0.yn-Y00)*U2}; }
+  el('path',{d:D(shown.map(r=>[X(r.t),Y(r.yn)])),class:'ln',stroke:'var(--path)'},g);
+  const last=shown[shown.length-1];
+  if(changed && t>=0){ const y0=f(ks(st.P0)), y0p=f(ks(st.P0)*st.kmul);
+    if(Math.abs(y0p-y0)>1e-6){ const yu=y0+(y0p-y0)*U2; el('path',{d:`M${X(0)} ${Y(y0)}V${Y(yu)}`,stroke:'var(--shock)','stroke-width':2.5},g); el('circle',{cx:X(0),cy:Y(y0),r:4.5,fill:'var(--surface)',stroke:'var(--shock)','stroke-width':1.5},g);
+      el('text',{x:X(0)+8,y:Y(Math.min(y0,y0p))+20,style:'fill:var(--shock);font-weight:600'},g,'jumps '+f2(y0)+' → '+f2(y0p)); }
+    else { el('circle',{cx:X(0),cy:Y(y0),r:hl?8:4.5,fill:'none',stroke:'var(--shock)','stroke-width':1.8},g);
+      el('text',{x:X(0)+8,y:Y(y0)+20,style:'fill:var(--shock);font-weight:600'},g,f2(y0)+', no jump'); } }
+  el('circle',{cx:X(last.t),cy:Y(last.yn),r:5,fill:'var(--shock)'},g);
+  // slope labels
+  const gNow = last.t<0 ? st.P0.gA : (()=>{ const hu=st.hold?st.u:1, k=st.hold?ks(st.P0)*(1+(st.kmul-1)*hu):last.k, nu=n(st.P0)+(n(st.P1)-n(st.P0))*hu, gAu=st.P0.gA+(st.P1.gA-st.P0.gA)*hu; return gAu+0.5*(st.P1.s*f(k)-nu*k)/k; })();
+  el('text',{x:m.l-40,y:14,style:'fill:var(--shock);font-weight:600'},g,`Year ${t.toFixed(0)}: Y/N = ${f2(last.yn)}`);
+  el('text',{x:m.l-40,y:32},g,`growing ${(gNow*100).toFixed(2)}% a year`);
+  if(t>=T1-0.01){
+    const e=st.sim[st.sim.length-1];
+    el('text',{x:X(T1)+6,y:Y(e.yn)+4,style:'fill:var(--path);font-weight:600'},g,f2(e.yn));
+    if(changed && Math.abs(e.b/e.yn-1)>0.04) el('text',{x:X(T1)+6,y:Y(e.b)+(e.b>e.yn?-2:14),style:'fill:var(--base)'},g,f2(e.b));
+  }
+}
+
+function snapNow(){
+  const r=at(st.t), A=r.yn/f(r.k), c=document.getElementById('snap');
+  document.getElementById('nowh').textContent='Year '+st.t.toFixed(0);
+  ['k','yan','a','yn'].forEach((id,i)=>{ const v=[r.k,f(r.k),A,r.yn][i]; const cell=document.getElementById('now-'+id); if(cell) cell.textContent=f2(v); });
+  const on=st.sc!=='steady' && (st.hold || Math.abs(st.t)<0.01);
+  document.getElementById('y0').classList.toggle('on',on);
+  document.getElementById('y0t').textContent = on ? (window.__y0t||'') : (st.sc==='steady' ? 'Pick a change above. The animation pauses at year 0, when the change happens.' : 'Press Play, or Go to year 0, to see the moment of the change.');
+}
+function draw(){ drawSolow(st.t); drawTime(st.t); snapNow(); document.getElementById('yr').textContent='Year '+st.t.toFixed(0); document.getElementById('scrub').value=st.t; }
+
+function explain(){
+  const P0=st.P0,P1=st.P1,k0=ks(P0),k1=ks(P1),y0=f(k0),y1=f(k1),kj=k0*st.kmul;
+  const e=st.sim[st.sim.length-1], r50=st.sim.find(r=>r.t>=50), lvl=r50.yn/r50.b-1;
+  const r0=st.sim.find(r=>r.t>=0), g0=P1.gA+0.5*(P1.s*f(r0.k)-n(P1)*r0.k)/r0.k;
+  const up=lvl>0, absl=Math.abs(lvl*100).toFixed(0);
+  document.getElementById('hd').textContent=SC[st.sc].name+'.';
+  let nums=`<span>K/AN*: <b>${f2(k0)}${Math.abs(k0-k1)>1e-6?' → '+f2(k1):''}</b></span><span>Y/AN*: <b>${f2(y0)}${Math.abs(k0-k1)>1e-6?' → '+f2(y1):''}</b></span><span>Long-run growth of Y/N: <b>${pc(P0.gA)}${P0.gA!==P1.gA?' → '+pc(P1.gA):''}</b></span>`;
+  document.getElementById('nums').innerHTML=nums;
+  const before=[k0,y0,1,y0], after=[kj,f(kj),1,f(kj)], names=['K/AN','Y/AN','A','Y/N'], ids=['k','yan','a','yn'];
+  document.getElementById('snap').innerHTML=names.map((nm,i)=>{ const j=Math.abs(after[i]-before[i])>1e-6;
+    return `<tr><td>${nm}</td><td>${f2(before[i])}</td><td class="${j?'jump':'same'}">${f2(after[i])}</td><td id="now-${ids[i]}"></td></tr>`; }).join('');
+  const isK=st.kmul!==1;
+  document.getElementById('snapnote').innerHTML = st.sc==='steady'
+    ? 'Nothing changes at year 0: every number just keeps following its steady-state path.'
+    : isK ? `At year 0, K itself changes overnight while A and N do not, so K/AN, Y/AN and Y/N all <b style="color:var(--shock)">jump</b> at once.`
+          : `At year 0, nothing jumps. K, A and N are what they are at that instant; only their <i>future growth rates</i> change. So Y/N is still ${f2(y0)}. Right after, K/AN and Y/AN start ${k1<k0?'falling':'rising'} toward ${f2(k1)} and ${f2(y1)}, and the effect builds up over the following years.`;
+  const G0=(g0*100).toFixed(1)+'%', K1=f2(k1), Y1=f2(y1);
+  const Y0T={
+    gNup:`Population growth rises to 5%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But more new workers now need capital, so saving no longer covers required investment. From here K/AN and Y/AN fall toward ${K1} and ${Y1}, and Y/N growth slows to ${G0}.`,
+    gNdown:`Population growth falls to 1%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But fewer new workers need capital, so saving now exceeds required investment. From here K/AN and Y/AN rise toward ${K1} and ${Y1}, and Y/N growth speeds up to ${G0}.`,
+    gAup:`Technological progress rises to 4%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But effective labor now grows faster, so saving no longer keeps up. From here K/AN and Y/AN fall toward ${K1} and ${Y1}, while Y/N growth jumps to ${G0} because A grows faster.`,
+    gAdown:`Technological progress falls to 1%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But effective labor now grows more slowly, so saving exceeds required investment. From here K/AN and Y/AN rise toward ${K1} and ${Y1}, while Y/N growth drops to ${G0} because A grows more slowly.`,
+    kloss:`20% of the capital stock is destroyed. K/AN drops from ${f2(k0)} to ${f2(kj)} and Y/N from ${f2(y0)} to ${f2(f(kj))} immediately.`,
+    kgain:`The capital stock rises 20%. K/AN jumps from ${f2(k0)} to ${f2(kj)} and Y/N from ${f2(y0)} to ${f2(f(kj))} immediately.`};
+  window.__y0t=Y0T[st.sc]||'';
+  const pts={
+    steady:[
+      `<b>Left:</b> the economy sits where s·f meets the line. Saving exactly covers depreciation, new workers and better workers, so K/AN stays at ${f2(k0)} and Y/AN at ${f2(y0)}.`,
+      `<b>Right:</b> Y/N = A × Y/AN. With Y/AN fixed and A growing ${pc(P0.gA)} a year, Y/N grows ${pc(P0.gA)} a year. On a log scale that is a straight line.`,
+      `Press <b>Play</b> to watch: the red dot on the left never moves, while Y/N on the right keeps climbing.`],
+    gNup:[
+      `<b>Left:</b> the line rotates up because more new workers need capital each year. Nothing jumps at year 0; K/AN slides down from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N keeps rising, but slower than ${pc(P0.gA)} while K/AN falls (${(g0*100).toFixed(1)}% in year 1). Once K/AN settles, growth is back to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>below</b> the old one. Same growth rate, lower level. (Total output Y grows faster, at ${pc(P1.gA+P1.gN)}.)`],
+    gNdown:[
+      `<b>Left:</b> the line rotates down because fewer new workers need equipping. K/AN climbs gradually from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N grows faster than ${pc(P0.gA)} while K/AN rises (${(g0*100).toFixed(1)}% in year 1), then settles back to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>above</b> the old one. Same growth rate, higher level.`],
+    gAup:[
+      `<b>Left:</b> exactly the same shift as higher g<sub>N</sub>: the line rotates up and K/AN falls from ${f2(k0)} to ${f2(k1)}. Effective labor now grows faster, so capital per effective worker can't keep up as well.`,
+      `<b>Right:</b> the opposite of higher g<sub>N</sub>. A grows ${pc(P1.gA)} a year, so the Y/N line gets <b>steeper</b>. It beats the old path from the first year (${(g0*100).toFixed(1)}% growth in year 1) and keeps pulling away.`,
+      `Lower Y/AN is a bookkeeping effect of a faster-growing denominator. Living standards grow faster forever: after 50 years Y/N is about ${absl}% higher.`],
+    gAdown:[
+      `<b>Left:</b> the line rotates down and K/AN rises from ${f2(k0)} to ${f2(k1)}. Y/AN* goes up.`,
+      `<b>Right:</b> the Y/N line gets <b>flatter</b>: long-run growth falls to ${pc(P1.gA)}. Higher Y/AN can't make up for A growing more slowly.`,
+      `After 50 years Y/N is about ${absl}% below the old path, and the gap keeps widening.`],
+    kloss:[
+      `<b>Left:</b> no curve moves, so the steady state is unchanged. The economy jumps left to K/AN = ${f2(kj)} and Y/AN falls to ${f2(f(kj))} (only ${pc(1-f(kj)/y0)} lower, thanks to diminishing returns).`,
+      `Below K/AN*, saving is more than required investment, so K/AN climbs back to ${f2(k0)}.`,
+      `<b>Right:</b> Y/N drops at year 0, then grows faster than ${pc(P0.gA)} (${(g0*100).toFixed(1)}% in year 1) until it rejoins the old path. No permanent damage.`],
+    kgain:[
+      `<b>Left:</b> no curve moves. The economy jumps right to K/AN = ${f2(kj)}, and Y/AN rises to ${f2(f(kj))}.`,
+      `Above K/AN*, saving is less than required investment, so K/AN drifts back down to ${f2(k0)}.`,
+      `<b>Right:</b> Y/N jumps up at year 0, then grows slower than ${pc(P0.gA)} (${(g0*100).toFixed(1)}% in year 1) until it is back on the old path. No permanent gain.`]
+  };
+  document.getElementById('pts').innerHTML=pts[st.sc].map(x=>`<li>${x}</li>`).join('');
+}
+
+function stop(){ if(st.raf) cancelAnimationFrame(st.raf); st.raf=0; st.playing=false; st.hold=false; document.getElementById('play').textContent='▶ Play'; }
+function play(){
+  if(st.playing){ stop(); return; }
+  if(reduce){ st.t=T1; draw(); return; }
+  st.playing=true; document.getElementById('play').textContent='❚❚ Pause';
+  const speed=(T1-T0)/7000;
+  let from = st.t>=T1-0.01 ? T0 : st.t, phase = from<0 ? 'pre' : 'post', segStart=performance.now(), holdUntil=0, holdStart=0;
+  const tick=now=>{
+    if(!st.playing) return;
+    if(phase==='hold'){ if(now>=holdUntil){ phase='post'; segStart=now; from=0; st.hold=false; } else { const q=Math.min(1,Math.max(0,(now-holdStart-500)/1400)); st.u=q<.5?2*q*q:1-Math.pow(-2*q+2,2)/2; draw(); st.raf=requestAnimationFrame(tick); return; } }
+    let t=from+(now-segStart)*speed;
+    if(phase==='pre' && t>=0){ t=0; phase='hold'; holdStart=now; holdUntil=now+(st.sc==='steady'?400:3600); st.hold=true; st.u=0; }
+    if(phase==='post' && t>=T1){ st.t=T1; draw(); stop(); return; }
+    st.t=Math.round(t*2)/2; draw(); st.raf=requestAnimationFrame(tick);
+  };
+  st.raf=requestAnimationFrame(tick);
+}
+function load(name,auto){
+  stop(); st.sc=name; const s=SC[name]; st.P0={...DEF}; st.P1={...DEF,...s.next}; st.kmul=s.kmul||1;
+  document.querySelectorAll('[data-sc]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sc===name?'true':'false'));
+  simulate(); explain(); st.t=auto?T0:T1; draw(); if(auto) play();
+}
+document.querySelectorAll('[data-sc]').forEach(b=>b.addEventListener('click',()=>load(b.dataset.sc,true)));
+document.getElementById('play').addEventListener('click',play);
+document.getElementById('go0').addEventListener('click',()=>{ stop(); st.t=0; draw(); });
+document.getElementById('reset').addEventListener('click',()=>load('steady',false));
+document.getElementById('scrub').addEventListener('input',e=>{ stop(); st.t=+e.target.value; draw(); });
+load('steady',false);
+})();
+</script>
+
+</body></html>
