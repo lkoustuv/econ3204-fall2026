@@ -113,6 +113,12 @@ footer{font-size:13.5px; color:var(--faint)}
       <button class="chip" data-sc="gAup">g<sub>A</sub> rises</button>
       <button class="chip" data-sc="gAdown">g<sub>A</sub> falls</button>
       <span class="sep"></span>
+      <button class="chip" data-sc="sup">s rises</button>
+      <button class="chip" data-sc="sdown">s falls</button>
+      <span class="sep"></span>
+      <button class="chip" data-sc="dup">δ rises</button>
+      <button class="chip" data-sc="ddown">δ falls</button>
+      <span class="sep"></span>
       <button class="chip" data-sc="kloss">Capital lost (−20%)</button>
       <button class="chip" data-sc="kgain">Capital gained (+20%)</button>
     </div>
@@ -179,6 +185,10 @@ const SC={
   gNdown:{name:'Population growth falls from 3% to 1%', next:{gN:.01}},
   gAup:{name:'Technological progress rises from 2% to 4%', next:{gA:.04}},
   gAdown:{name:'Technological progress falls from 2% to 1%', next:{gA:.01}},
+  sup:{name:'The saving rate rises from 30% to 40%', next:{s:.40}},
+  sdown:{name:'The saving rate falls from 30% to 20%', next:{s:.20}},
+  dup:{name:'Depreciation rises from 5% to 8%', next:{d:.08}},
+  ddown:{name:'Depreciation falls from 5% to 3%', next:{d:.03}},
   kloss:{name:'20% of the capital stock is destroyed (war, earthquake)', next:{}, kmul:0.8},
   kgain:{name:'The capital stock rises 20% overnight (e.g. a large aid or investment inflow)', next:{}, kmul:1.2}
 };
@@ -203,19 +213,21 @@ function drawSolow(t){
   const X=v=>m.l+v/kmax*(W-m.l-m.r), Y=v=>H-m.b-v/ymax*(H-m.t-m.b);
   const g=el('g',null,svg);
   el('path',{d:`M${m.l} ${m.t}V${H-m.b}H${W-m.r}`,class:'axis'},g);
-  const pf=[],ps=[]; for(let i=0;i<=140;i++){const k=kmax*i/140; pf.push([X(k),Y(f(k))]); ps.push([X(k),Y(st.P1.s*f(k))]);}
-  el('path',{d:D(pf),class:'ln',stroke:'var(--f)'},g);
-  el('path',{d:D(ps),class:'ln',stroke:'var(--sf)'},g);
   const U = t<0 ? 0 : (st.hold ? st.u : 1);
-  const n0=n(st.P0), n1=n(st.P1), changed=Math.abs(n0-n1)>1e-9;
-  const nu=n0+(n1-n0)*U, ku=Math.pow(st.P1.s/nu,2);
+  const s0=st.P0.s, s1=st.P1.s, sChg=Math.abs(s0-s1)>1e-9, su=s0+(s1-s0)*U;
+  const pf=[],ps=[],ps0=[]; for(let i=0;i<=140;i++){const k=kmax*i/140; pf.push([X(k),Y(f(k))]); ps.push([X(k),Y(su*f(k))]); ps0.push([X(k),Y(s0*f(k))]);}
+  el('path',{d:D(pf),class:'ln',stroke:'var(--f)'},g);
+  if(sChg && U>0){ el('path',{d:D(ps0),class:'ln thin dash fade',stroke:'var(--sf)'},g); el('text',{x:X(kmax)+6,y:Y(s0*f(kmax))+(s0<s1?16:-6),class:'lbl',style:'fill:var(--base)'},g,'old s·f'); }
+  el('path',{d:D(ps),class:'ln',stroke:'var(--sf)','stroke-width':(st.hold&&U<1&&sChg)?4:2.6},g);
+  const n0=n(st.P0), n1=n(st.P1), lChg=Math.abs(n0-n1)>1e-9, changed=lChg||sChg;
+  const nu=n0+(n1-n0)*U, ku=Math.pow(su/nu,2);
   const end=nn=>{const ke=Math.min(kmax,ymax*.95/nn); return [X(ke),Y(nn*ke)];};
   const e0=end(n0), eu=end(nu);
-  if(changed && U>0){ el('path',{d:`M${X(0)} ${Y(0)}L${e0[0]} ${e0[1]}`,class:'ln thin dash fade',stroke:'var(--br)'},g); el('text',{x:e0[0]+6,y:e0[1]+(n0<n1?14:-4),class:'lbl',style:'fill:var(--base)'},g,'old line'); }
-  el('path',{d:`M${X(0)} ${Y(0)}L${eu[0]} ${eu[1]}`,class:'ln',stroke:'var(--br)','stroke-width':(st.hold&&U<1&&changed)?4:2.6},g);
+  if(lChg && U>0){ el('path',{d:`M${X(0)} ${Y(0)}L${e0[0]} ${e0[1]}`,class:'ln thin dash fade',stroke:'var(--br)'},g); el('text',{x:e0[0]+6,y:e0[1]+(n0<n1?14:-4),class:'lbl',style:'fill:var(--base)'},g,'old line'); }
+  el('path',{d:`M${X(0)} ${Y(0)}L${eu[0]} ${eu[1]}`,class:'ln',stroke:'var(--br)','stroke-width':(st.hold&&U<1&&lChg)?4:2.6},g);
   el('text',{x:X(kmax)+6,y:Y(f(kmax))+5,class:'lbl',style:'fill:var(--f)'},g,'f(K/AN)');
-  el('text',{x:X(kmax)+6,y:Y(st.P1.s*f(kmax))+5,class:'lbl',style:'fill:var(--sf)'},g,'s·f(K/AN)');
-  el('text',{x:eu[0]+6,y:eu[1]+(changed&&n1<n0&&U>0?14:-4),class:'lbl',style:'fill:var(--br)'},g,'(δ+gA+gN)K/AN');
+  el('text',{x:X(kmax)+6,y:Y(su*f(kmax))+5,class:'lbl',style:'fill:var(--sf)'},g,'s·f(K/AN)');
+  el('text',{x:eu[0]+6,y:eu[1]+(lChg&&n1<n0&&U>0?14:-4),class:'lbl',style:'fill:var(--br)'},g,'(δ+gA+gN)K/AN');
   const ss=(k,col,label,dy)=>{ el('path',{d:`M${X(k)} ${Y(0)}V${Y(f(k))}H${X(0)}`,class:'ln thin dot',stroke:col},g);
     el('text',{x:X(k),y:H-m.b+16+dy,'text-anchor':'middle',style:`fill:${col}`},g,label); };
   if(changed && U>0){ ss(k0,'var(--base)','old K/AN* = '+f2(k0),16); ss(ku,'var(--ink)',(U<1?'K/AN* → ':'new K/AN* = ')+f2(ku),0); }
@@ -224,13 +236,13 @@ function drawSolow(t){
   if(st.kmul!==1 && U>0){ el('path',{d:`M${X(k0)} ${Y(0)+0}H${X(kj)}`,stroke:'var(--shock)','stroke-width':3,opacity:.7},g); el('text',{x:X(k0*st.kmul),y:H-m.b+32,'text-anchor':'middle',style:'fill:var(--shock)'},g,'year 0: '+f2(k0*st.kmul)); }
   // current position
   const k = t<0 ? k0 : (st.hold ? (st.kmul!==1 ? kj : k0) : at(t).k);
-  const sv=st.P1.s*f(k), ri=nu*k;
+  const sv=su*f(k), ri=nu*k;
   if(t>=0 && Math.abs(sv-ri)>1e-3) el('path',{d:`M${X(k)} ${Y(Math.min(sv,ri))}V${Y(Math.max(sv,ri))}`,stroke:sv>ri?'var(--sf)':'var(--shock)','stroke-width':7,opacity:.5},g);
   el('path',{d:`M${X(k)} ${Y(0)}V${Y(f(k))}`,class:'ln thin',stroke:'var(--shock)'},g);
   el('circle',{cx:X(k),cy:Y(f(k)),r:5.5,fill:'var(--shock)'},g);
   el('circle',{cx:X(k),cy:Y(0),r:5.5,fill:'var(--shock)'},g);
   let msg = t<0 || Math.abs(sv-ri)<1e-2*sv ? 'saving = required investment → K/AN constant' : sv>ri ? 'saving > required investment → K/AN rising' : 'saving < required investment → K/AN falling';
-  if(st.hold && U<1) msg = changed ? 'year 0: the line rotates; the economy has not moved yet' : 'year 0: capital jumps; no curve moves';
+  if(st.hold && U<1) msg = sChg ? 'year 0: the s·f curve rotates; the economy has not moved yet' : changed ? 'year 0: the line rotates; the economy has not moved yet' : 'year 0: capital jumps; no curve moves';
   el('text',{x:m.l-40,y:14,style:'fill:var(--shock);font-weight:600'},g,`Year ${t.toFixed(0)}: K/AN = ${f2(k)}, Y/AN = ${f2(f(k))}`);
   el('text',{x:m.l-40,y:32},g,msg);
   el('text',{x:m.l-8,y:m.t+4,'text-anchor':'end',class:'lbl'},g,'Y/AN');
@@ -267,7 +279,7 @@ function drawTime(t){
       el('text',{x:X(0)+8,y:Y(y0)+20,style:'fill:var(--shock);font-weight:600'},g,f2(y0)+', no jump'); } }
   el('circle',{cx:X(last.t),cy:Y(last.yn),r:5,fill:'var(--shock)'},g);
   // slope labels
-  const gNow = last.t<0 ? st.P0.gA : (()=>{ const hu=st.hold?st.u:1, k=st.hold?ks(st.P0)*(1+(st.kmul-1)*hu):last.k, nu=n(st.P0)+(n(st.P1)-n(st.P0))*hu, gAu=st.P0.gA+(st.P1.gA-st.P0.gA)*hu; return gAu+0.5*(st.P1.s*f(k)-nu*k)/k; })();
+  const gNow = last.t<0 ? st.P0.gA : (()=>{ const hu=st.hold?st.u:1, k=st.hold?ks(st.P0)*(1+(st.kmul-1)*hu):last.k, nu=n(st.P0)+(n(st.P1)-n(st.P0))*hu, gAu=st.P0.gA+(st.P1.gA-st.P0.gA)*hu, su=st.P0.s+(st.P1.s-st.P0.s)*hu; return gAu+0.5*(su*f(k)-nu*k)/k; })();
   el('text',{x:m.l-40,y:14,style:'fill:var(--shock);font-weight:600'},g,`Year ${t.toFixed(0)}: Y/N = ${f2(last.yn)}`);
   el('text',{x:m.l-40,y:32},g,`growing ${(gNow*100).toFixed(2)}% a year`);
   if(t>=T1-0.01){
@@ -302,13 +314,17 @@ function explain(){
   document.getElementById('snapnote').innerHTML = st.sc==='steady'
     ? 'Nothing changes at year 0: every number just keeps following its steady-state path.'
     : isK ? `At year 0, K itself changes overnight while A and N do not, so K/AN, Y/AN and Y/N all <b style="color:var(--shock)">jump</b> at once.`
-          : `At year 0, nothing jumps. K, A and N are what they are at that instant; only their <i>future growth rates</i> change. So Y/N is still ${f2(y0)}. Right after, K/AN and Y/AN start ${k1<k0?'falling':'rising'} toward ${f2(k1)} and ${f2(y1)}, and the effect builds up over the following years.`;
+          : `At year 0, nothing jumps. K, A and N are what they are at that instant; what changes is how they evolve <i>from now on</i>. So Y/N is still ${f2(y0)}. Right after, K/AN and Y/AN start ${k1<k0?'falling':'rising'} toward ${f2(k1)} and ${f2(y1)}, and the effect builds up over the following years.`;
   const G0=(g0*100).toFixed(1)+'%', K1=f2(k1), Y1=f2(y1);
   const Y0T={
     gNup:`Population growth rises to 5%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But more new workers now need capital, so saving no longer covers required investment. From here K/AN and Y/AN fall toward ${K1} and ${Y1}, and Y/N growth slows to ${G0}.`,
     gNdown:`Population growth falls to 1%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But fewer new workers need capital, so saving now exceeds required investment. From here K/AN and Y/AN rise toward ${K1} and ${Y1}, and Y/N growth speeds up to ${G0}.`,
     gAup:`Technological progress rises to 4%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But effective labor now grows faster, so saving no longer keeps up. From here K/AN and Y/AN fall toward ${K1} and ${Y1}, while Y/N growth jumps to ${G0} because A grows faster.`,
     gAdown:`Technological progress falls to 1%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But effective labor now grows more slowly, so saving exceeds required investment. From here K/AN and Y/AN rise toward ${K1} and ${Y1}, while Y/N growth drops to ${G0} because A grows more slowly.`,
+    sup:`The saving rate rises to 40%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But saving now exceeds required investment, so from here K/AN and Y/AN rise toward ${K1} and ${Y1}, and Y/N growth jumps to ${G0}.`,
+    sdown:`The saving rate falls to 20%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But saving no longer covers required investment, so from here K/AN and Y/AN fall toward ${K1} and ${Y1}, and Y/N growth drops to ${G0}.`,
+    dup:`Depreciation rises to 8%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But machines now wear out faster, so saving no longer covers required investment. From here K/AN and Y/AN fall toward ${K1} and ${Y1}, and Y/N growth drops to ${G0}.`,
+    ddown:`Depreciation falls to 3%. Nothing jumps yet: K/AN, Y/AN and Y/N are where they were. But machines now last longer, so saving exceeds required investment. From here K/AN and Y/AN rise toward ${K1} and ${Y1}, and Y/N growth jumps to ${G0}.`,
     kloss:`20% of the capital stock is destroyed. K/AN drops from ${f2(k0)} to ${f2(kj)} and Y/N from ${f2(y0)} to ${f2(f(kj))} immediately.`,
     kgain:`The capital stock rises 20%. K/AN jumps from ${f2(k0)} to ${f2(kj)} and Y/N from ${f2(y0)} to ${f2(f(kj))} immediately.`};
   window.__y0t=Y0T[st.sc]||'';
@@ -333,6 +349,22 @@ function explain(){
       `<b>Left:</b> the line rotates down and K/AN rises from ${f2(k0)} to ${f2(k1)}. Y/AN* goes up.`,
       `<b>Right:</b> the Y/N line gets <b>flatter</b>: long-run growth falls to ${pc(P1.gA)}. Higher Y/AN can't make up for A growing more slowly.`,
       `After 50 years Y/N is about ${absl}% below the old path, and the gap keeps widening.`],
+    sup:[
+      `<b>Left:</b> the s·f curve rotates up: more of each unit of output is saved. Nothing jumps at year 0; K/AN climbs gradually from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N grows faster than ${pc(P0.gA)} while K/AN rises (${(g0*100).toFixed(1)}% in year 1). Diminishing returns slow the climb, and growth settles back to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>above</b> the old one. Higher saving raises the level of Y/N, not its long-run growth rate.`],
+    sdown:[
+      `<b>Left:</b> the s·f curve rotates down. Nothing jumps at year 0; K/AN slides from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N grows slower than ${pc(P0.gA)} while K/AN falls (${(g0*100).toFixed(1)}% in year 1), then growth returns to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>below</b> the old one. Same growth rate, lower level.`],
+    dup:[
+      `<b>Left:</b> the line rotates up, just as with higher g<sub>N</sub>: more saving is needed just to replace worn-out machines. K/AN slides from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N grows slower than ${pc(P0.gA)} during the transition (${(g0*100).toFixed(1)}% in year 1), then growth returns to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>below</b> the old one. Same growth rate, lower level.`],
+    ddown:[
+      `<b>Left:</b> the line rotates down: less saving goes to replacing machines. K/AN climbs from ${f2(k0)} to ${f2(k1)}.`,
+      `<b>Right:</b> Y/N grows faster than ${pc(P0.gA)} during the transition (${(g0*100).toFixed(1)}% in year 1), then growth returns to ${pc(P1.gA)}.`,
+      `Result: a parallel path about ${absl}% <b>above</b> the old one. Same growth rate, higher level.`],
     kloss:[
       `<b>Left:</b> no curve moves, so the steady state is unchanged. The economy jumps left to K/AN = ${f2(kj)} and Y/AN falls to ${f2(f(kj))} (only ${pc(1-f(kj)/y0)} lower, thanks to diminishing returns).`,
       `Below K/AN*, saving is more than required investment, so K/AN climbs back to ${f2(k0)}.`,
